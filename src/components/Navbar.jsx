@@ -34,8 +34,39 @@ const PRIVATE_LINKS = [
 export default function Navbar() {
   const pathname = usePathname();
   const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [menuOpen, setMenu] = useState(false);
   const [scrolled, setScroll] = useState(false);
+
+  // Fetch current user from backend
+  const fetchUser = async () => {
+    try {
+      const res = await fetch("/api/auth/me", {
+        method: "GET",
+        credentials: "include",   // Important for httpOnly cookies
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setUser(data.user);
+      } else {
+        setUser(null);
+      }
+    } catch (error) {
+      setUser(null);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchUser();
+  }, []);
+
+  // Refresh user when route changes (after login/register)
+  useEffect(() => {
+    fetchUser();
+  }, [pathname]);
 
   useEffect(() => {
     const handleScroll = () => setScroll(window.scrollY > 8);
@@ -47,10 +78,27 @@ export default function Navbar() {
     setMenu(false);
   }, [pathname]);
 
-  const login = () => setUser({ name: "Rafi", role: "user" });
-  const logout = () => { setUser(null); setMenu(false); };
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/auth/logout", {
+        method: "POST",
+        credentials: "include",
+      });
+    } catch (err) {
+      console.error(err);
+    }
+    setUser(null);
+    setMenu(false);
+    window.location.href = "/";
+  };
 
   const links = user ? [...PUBLIC_LINKS, ...PRIVATE_LINKS] : PUBLIC_LINKS;
+
+  if (loading) {
+    return (
+      <header className="fixed top-0 left-0 right-0 z-[9999] h-16 bg-[#0D0D1A]/95 backdrop-blur-md" />
+    );
+  }
 
   return (
     <header className="fixed top-0 left-0 right-0 z-[9999]">
@@ -109,13 +157,13 @@ export default function Navbar() {
                 exit={{ opacity: 0 }}
                 className="flex items-center gap-2"
               >
-                <button
-                  onClick={login}
+                <Link
+                  href="/auth/login"
                   className="flex items-center gap-[6px] px-4 py-[7px] rounded-[9px] text-[13.5px] font-medium text-[#F4C430] border border-[#F4C430]/30 hover:bg-[#F4C430]/10 transition-all"
                 >
                   <LogIn size={13} strokeWidth={2} />
                   Login
-                </button>
+                </Link>
 
                 <Link
                   href="/register"
@@ -141,11 +189,11 @@ export default function Navbar() {
                   whileHover={{ scale: 1.07 }}
                   className="w-[34px] h-[34px] rounded-full flex items-center justify-center text-sm font-bold cursor-pointer bg-gradient-to-br from-[#F4C430] to-[#818CF8] text-[#0D0D1A] border-[1.5px] border-[#F4C430]/40"
                 >
-                  {user.name[0]}
+                  {user.name?.[0] || "U"}
                 </motion.div>
 
                 <button
-                  onClick={logout}
+                  onClick={handleLogout}
                   className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-[12.5px] font-medium text-[#64748B] hover:text-[#F87171] hover:bg-[#F87171]/10 transition-all"
                 >
                   <LogOut size={13} strokeWidth={1.8} />
@@ -156,7 +204,7 @@ export default function Navbar() {
           </AnimatePresence>
         </div>
 
-        {/* Hamburger */}
+        {/* Hamburger Button */}
         <button
           onClick={() => setMenu((p) => !p)}
           className="md:hidden w-9 h-9 flex items-center justify-center rounded-[9px] text-[#94A3B8] hover:text-white transition-colors"
@@ -210,22 +258,24 @@ export default function Navbar() {
               <div className="border-t border-white/10 pt-5 flex gap-3">
                 {!user ? (
                   <>
-                    <button
-                      onClick={() => { login(); setMenu(false); }}
+                    <Link
+                      href="/auth/login"
                       className="flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl text-[13.5px] font-medium text-[#F4C430] border border-[#F4C430]/28 hover:bg-[#F4C430]/10"
+                      onClick={() => setMenu(false)}
                     >
                       <LogIn size={15} /> Login
-                    </button>
+                    </Link>
                     <Link
                       href="/register"
                       className="flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl text-[13.5px] font-semibold text-[#0D0D1A] bg-[#F4C430]"
+                      onClick={() => setMenu(false)}
                     >
                       <UserPlus size={15} /> Get Started
                     </Link>
                   </>
                 ) : (
                   <button
-                    onClick={logout}
+                    onClick={handleLogout}
                     className="flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl text-[13.5px] font-medium text-[#F87171] border border-red-500/25 hover:bg-red-500/10"
                   >
                     <LogOut size={15} /> Logout
