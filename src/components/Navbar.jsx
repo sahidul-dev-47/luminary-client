@@ -166,7 +166,7 @@ export default function Navbar() {
                 </Link>
 
                 <Link
-                  href="/register"
+                  href="/auth/register"
                   className="flex items-center gap-[6px] px-4 py-[7px] rounded-[9px] text-[13.5px] font-semibold text-[#0D0D1A] bg-[#F4C430] hover:opacity-90 active:translate-y-[-1px] transition-all"
                 >
                   <UserPlus size={13} strokeWidth={2.2} />
@@ -266,7 +266,7 @@ export default function Navbar() {
                       <LogIn size={15} /> Login
                     </Link>
                     <Link
-                      href="/register"
+                      href="/auth/register"
                       className="flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl text-[13.5px] font-semibold text-[#0D0D1A] bg-[#F4C430]"
                       onClick={() => setMenu(false)}
                     >
