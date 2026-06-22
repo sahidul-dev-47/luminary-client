@@ -1,6 +1,7 @@
 import { Playfair_Display, Inter } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 
 const playfair = Playfair_Display({
   variable: "--font-playfair",
@@ -31,6 +32,7 @@ export default function RootLayout({ children }) {
       <body className="min-h-full flex flex-col bg-[#0D0D1A] text-[#F8FAFC]">
         <Navbar />
         <main className="flex-1 pt-16">{children}</main>
+        <Footer></Footer>
       </body>
     </html>
   );
