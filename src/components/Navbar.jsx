@@ -8,6 +8,7 @@ import {
   Home, BookOpen, LayoutDashboard,
   LogIn, UserPlus, Menu, X, LogOut,
 } from "lucide-react";
+import { signOut, useSession } from "@/lib/auth-client";
 
 const LuminaryIcon = ({ size = 34 }) => (
   <svg width={size} height={size} viewBox="0 0 38 38" fill="none">
@@ -33,67 +34,32 @@ const PRIVATE_LINKS = [
 
 export default function Navbar() {
   const pathname = usePathname();
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [menuOpen, setMenu] = useState(false);
   const [scrolled, setScroll] = useState(false);
 
-  // Fetch current user from backend
-  const fetchUser = async () => {
-    try {
-      const res = await fetch("/api/auth/me", {
-        method: "GET",
-        credentials: "include",   // Important for httpOnly cookies
-      });
+  // ✅ Authentication using useSession
+  const { data: session, isPending: loading } = useSession();
+  const user = session?.user;
 
-      if (res.ok) {
-        const data = await res.json();
-        setUser(data.user);
-      } else {
-        setUser(null);
-      }
-    } catch (error) {
-      setUser(null);
-    } finally {
-      setLoading(false);
-    }
+  const handleLogout = async () => {
+    await signOut();
   };
 
-  useEffect(() => {
-    fetchUser();
-  }, []);
-
-  // Refresh user when route changes (after login/register)
-  useEffect(() => {
-    fetchUser();
-  }, [pathname]);
-
+  // Scroll effect
   useEffect(() => {
     const handleScroll = () => setScroll(window.scrollY > 8);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  // Close mobile menu on route change
   useEffect(() => {
     setMenu(false);
   }, [pathname]);
 
-  const handleLogout = async () => {
-    try {
-      await fetch("/api/auth/logout", {
-        method: "POST",
-        credentials: "include",
-      });
-    } catch (err) {
-      console.error(err);
-    }
-    setUser(null);
-    setMenu(false);
-    window.location.href = "/";
-  };
-
   const links = user ? [...PUBLIC_LINKS, ...PRIVATE_LINKS] : PUBLIC_LINKS;
 
+  // Loading skeleton
   if (loading) {
     return (
       <header className="fixed top-0 left-0 right-0 z-[9999] h-16 bg-[#0D0D1A]/95 backdrop-blur-md" />
@@ -246,6 +212,7 @@ export default function Navbar() {
                             ? "text-[#F4C430] bg-[#F4C430]/10"
                             : "text-[#94A3B8] hover:text-white hover:bg-white/5"
                         }`}
+                        onClick={() => setMenu(false)}
                       >
                         <Icon size={17} strokeWidth={1.8} />
                         {label}

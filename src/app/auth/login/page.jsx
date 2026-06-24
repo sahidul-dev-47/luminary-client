@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Mail, Lock, Eye, EyeOff, ArrowRight, Check, Loader2 } from "lucide-react";
+import { signIn, useSession } from "@/lib/auth-client";
 
-const F  = { fontFamily: "'Inter','system-ui',sans-serif" };
+const F = { fontFamily: "'Inter','system-ui',sans-serif" };
 const FD = { fontFamily: "'Playfair Display',Georgia,serif" };
 const ACC = "#F4C430";
 
@@ -15,9 +16,16 @@ function LeftIllustration() {
   const quotes = [
     { text: "A reader lives a thousand lives.", author: "George R.R. Martin" },
     { text: "Not all those who wander are lost.", author: "J.R.R. Tolkien" },
-    { text: "So many books, so little time.",    author: "Frank Zappa" },
+    { text: "So many books, so little time.", author: "Frank Zappa" },
   ];
-  const [q] = useState(() => quotes[Math.floor(Math.random() * quotes.length)]);
+
+  const [q, setQ] = useState(quotes[0]); // Default quote for server
+
+  // Client side এ random quote সেট করা
+  useEffect(() => {
+    const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
+    setQ(randomQuote);
+  }, []);
 
   return (
     <div className="flex flex-col justify-between p-10 relative"
@@ -34,7 +42,7 @@ function LeftIllustration() {
           <path d="M19 9L22 17L19 15L16 17Z" fill="#F4C430"/>
           <path d="M19 15L19 26" stroke="#F4C430" strokeWidth="1.5" strokeLinecap="round"/>
           <circle cx="19" cy="9" r="2" fill="#F4C430"/>
-          <path d="M13 11L9 9"  stroke="rgba(244,196,48,0.45)" strokeWidth="1" strokeLinecap="round"/>
+          <path d="M13 11L9 9" stroke="rgba(244,196,48,0.45)" strokeWidth="1" strokeLinecap="round"/>
           <path d="M25 11L29 9" stroke="rgba(244,196,48,0.45)" strokeWidth="1" strokeLinecap="round"/>
         </svg>
         <span style={{ ...FD, fontSize:17, fontWeight:700, color:"#F0EDE6", letterSpacing:".02em" }}>Luminary</span>
@@ -44,7 +52,6 @@ function LeftIllustration() {
       <div className="flex flex-col items-center text-center">
         {/* Open book SVG */}
         <svg width="140" height="110" viewBox="0 0 140 110" fill="none" style={{ marginBottom:20 }}>
-          {/* left page */}
           <path d="M10 12 Q10 8 14 8 L66 10 Q70 10 70 14 L70 96 Q70 100 66 100 L14 98 Q10 98 10 94 Z"
             fill="rgba(244,196,48,0.07)" stroke="rgba(244,196,48,0.18)" strokeWidth=".6"/>
           <path d="M14 8 L14 98" stroke="rgba(244,196,48,0.12)" strokeWidth=".5"/>
@@ -52,7 +59,6 @@ function LeftIllustration() {
             <line key={i} x1="20" y1={y} x2={50+Math.sin(i)*6} y2={y}
               stroke="rgba(244,196,48,0.18)" strokeWidth=".8" strokeLinecap="round"/>
           ))}
-          {/* right page */}
           <path d="M130 12 Q130 8 126 8 L74 10 Q70 10 70 14 L70 96 Q70 100 74 100 L126 98 Q130 98 130 94 Z"
             fill="rgba(129,140,248,0.06)" stroke="rgba(129,140,248,0.15)" strokeWidth=".6"/>
           <path d="M126 8 L126 98" stroke="rgba(129,140,248,0.1)" strokeWidth=".5"/>
@@ -60,16 +66,13 @@ function LeftIllustration() {
             <line key={i} x1="120" y1={y} x2={90-Math.sin(i)*6} y2={y}
               stroke="rgba(129,140,248,0.15)" strokeWidth=".8" strokeLinecap="round"/>
           ))}
-          {/* spine */}
           <path d="M70 10 Q70 14 70 96" stroke="rgba(244,196,48,0.25)" strokeWidth="1.5"/>
-          {/* Luminary icon centre */}
           <g transform="translate(58,44)">
             <circle cx="12" cy="12" r="11" fill="rgba(244,196,48,0.08)" stroke="rgba(244,196,48,0.25)" strokeWidth=".6"/>
             <path d="M12 5L14 11L12 9.5L10 11Z" fill="#F4C430"/>
             <path d="M12 9.5L12 17" stroke="#F4C430" strokeWidth="1" strokeLinecap="round"/>
             <circle cx="12" cy="5" r="1.4" fill="#F4C430"/>
           </g>
-          {/* shadow */}
           <ellipse cx="70" cy="105" rx="46" ry="4" fill="rgba(0,0,0,0.3)"/>
         </svg>
 
@@ -80,14 +83,12 @@ function LeftIllustration() {
           Your library is waiting. Pick up where you left off.
         </p>
 
-        {/* Floating quote card */}
         <div className="w-full rounded-[12px] p-3.5 text-left"
           style={{ background:"rgba(255,255,255,0.02)", border:"0.5px solid rgba(255,255,255,0.07)" }}>
           <p className="text-[11px] italic leading-relaxed mb-2" style={{ color:"#475569", ...F }}>"{q.text}"</p>
           <p className="text-[10px]" style={{ color:"#1E293B", ...F }}>— {q.author}</p>
         </div>
 
-        {/* Stats mini row */}
         <div className="flex items-center gap-0 mt-5 w-full">
           {[{ n:"12K+", l:"Ebooks" },{ n:"50K", l:"Readers" },{ n:"4.9★", l:"Rating" }].map((s,i) => (
             <div key={i} className="flex items-center flex-1">
@@ -130,7 +131,7 @@ function Field({ label, id, type, value, onChange, placeholder, error, icon: Ico
             color: "#EDE9E0", ...F,
           }}
           onFocus={e => { if (!error) e.target.style.borderColor = "rgba(244,196,48,0.38)"; }}
-          onBlur={e  => { if (!error) e.target.style.borderColor = "rgba(255,255,255,0.08)"; }}
+          onBlur={e => { if (!error) e.target.style.borderColor = "rgba(255,255,255,0.08)"; }}
         />
         {rightSlot}
       </div>
@@ -144,15 +145,25 @@ function Field({ label, id, type, value, onChange, placeholder, error, icon: Ico
   );
 }
 
-// ── Main page ──────────────────────────────────────────────
+// ── Main Login Page ──────────────────────────────────────────────
 export default function LoginPage() {
   const router = useRouter();
-  const [form, setForm]     = useState({ email:"", password:"" });
-  const [errors, setErrors] = useState({});
-  const [showPw, setShowPw] = useState(false);
-  const [status, setStatus] = useState("idle"); // idle | loading | success
+  const { data: session } = useSession();
 
-  const set = k => e => { setForm(p => ({ ...p, [k]: e.target.value })); setErrors(p => ({ ...p, [k]:"" })); };
+  const [form, setForm] = useState({ email: "", password: "" });
+  const [errors, setErrors] = useState({});
+  const [apiError, setApiError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [showRoleModal, setShowRoleModal] = useState(false);
+
+  const [showPw, setShowPw] = useState(false);
+
+  const set = (k) => (e) => {
+    setForm(p => ({ ...p, [k]: e.target.value }));
+    setErrors(p => ({ ...p, [k]: "" }));
+    setApiError("");
+  };
 
   const validate = () => {
     const e = {};
@@ -162,138 +173,163 @@ export default function LoginPage() {
     return Object.keys(e).length === 0;
   };
 
-  const handleSubmit = async ev => {
-    ev.preventDefault();
-    if (!validate()) return;
-    setStatus("loading");
+  
+ useEffect(() => {
+  const checkRole = async () => {
+    if (!session?.user?.email) return;
+
     try {
-      const res  = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
+      const res = await fetch("/api/auth/check-role");
+
       const data = await res.json();
-      if (res.ok) {
-        setStatus("success");
-        setTimeout(() => router.push("/"), 1400);
+
+      if (!data.role) {
+        setShowRoleModal(true);
       } else {
-        setErrors({ api: data.message || "Invalid email or password" });
-        setStatus("idle");
+        router.push("/dashboard");
       }
-    } catch {
-      setErrors({ api: "Something went wrong. Please try again." });
-      setStatus("idle");
+    } catch (error) {
+      console.error(error);
     }
   };
 
-  const handleGoogle = () => {
-    // TODO: connect BetterAuth / NextAuth Google provider
-    console.log("Google login");
+  checkRole();
+}, [session, router]);
+
+  const handleSubmit = async (ev) => {
+    ev.preventDefault();
+    setApiError("");
+
+    if (!validate()) return;
+
+    setIsLoading(true);
+
+    try {
+      const { error } = await signIn.email({
+        email: form.email.trim(),
+        password: form.password,
+      });
+
+      if (error) {
+        setApiError(error.message || "Invalid email or password");
+        return;
+      }
+
+      setSuccess(true);
+      setTimeout(() => router.push("/dashboard"), 1400);
+    } catch (err) {
+      console.error(err);
+      setApiError("Something went wrong. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleGoogle = async () => {
+    await signIn.social({
+      provider: "google",
+      callbackURL: "/auth/login",
+    });
+  };
+
+  const handleRoleSelect = async (selectedRole) => {
+    setIsLoading(true);
+    try {
+      const res = await fetch("/api/auth/update-role", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ role: selectedRole }),
+      });
+
+      if (res.ok) {
+        setShowRoleModal(false);
+        setSuccess(true);
+        setTimeout(() => router.push("/dashboard"), 1500);
+      } else {
+        setApiError("Failed to save role");
+      }
+    } catch (err) {
+      setApiError("Network error occurred");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center p-5"
-      style={{ background:"#07070E", position:"relative", overflow:"hidden" }}>
+      style={{ background: "#07070E", position: "relative", overflow: "hidden" }}>
 
-      {/* dot grid */}
       <div className="absolute inset-0 pointer-events-none"
-        style={{ backgroundImage:"radial-gradient(rgba(255,255,255,0.045) 1px,transparent 1px)", backgroundSize:"24px 24px" }} />
+        style={{ backgroundImage: "radial-gradient(rgba(255,255,255,0.045) 1px,transparent 1px)", backgroundSize: "24px 24px" }} />
 
       <style>{`
         @media(max-width:700px){ .login-grid{ grid-template-columns:1fr!important } .login-left{ display:none!important } }
       `}</style>
 
       <div className="login-grid relative z-10 w-full max-w-[860px] overflow-hidden rounded-[20px]"
-        style={{ display:"grid", gridTemplateColumns:"1fr 1fr", border:"0.5px solid rgba(244,196,48,0.12)" }}>
+        style={{ display: "grid", gridTemplateColumns: "1fr 1fr", border: "0.5px solid rgba(244,196,48,0.12)" }}>
 
-        {/* LEFT */}
         <div className="login-left">
           <LeftIllustration />
         </div>
 
-        {/* RIGHT */}
-        <div className="flex flex-col justify-center p-9" style={{ background:"#0C0B1A" }}>
+        <div className="flex flex-col justify-center p-9" style={{ background: "#0C0B1A" }}>
 
-          <h1 style={{ ...FD, fontSize:22, fontWeight:700, color:"#EDE9E0", marginBottom:4 }}>Sign in</h1>
-          <p className="text-[12px] mb-6" style={{ color:"#334155", ...F }}>
+          <h1 style={{ ...FD, fontSize: 22, fontWeight: 700, color: "#EDE9E0", marginBottom: 4 }}>Sign in</h1>
+          <p className="text-[12px] mb-6" style={{ color: "#334155", ...F }}>
             Access your library and dashboard.
           </p>
 
-          {/* API error */}
           <AnimatePresence>
-            {errors.api && (
-              <motion.div initial={{ opacity:0, y:-6 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0 }}
+            {apiError && (
+              <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
                 className="mb-4 px-3 py-2 rounded-[9px] text-[12px]"
-                style={{ background:"rgba(248,113,113,0.08)", border:"0.5px solid rgba(248,113,113,0.25)", color:"#F87171", ...F }}>
-                {errors.api}
+                style={{ background: "rgba(248,113,113,0.08)", border: "0.5px solid rgba(248,113,113,0.25)", color: "#F87171", ...F }}>
+                {apiError}
               </motion.div>
             )}
           </AnimatePresence>
 
+          {success && (
+            <div className="mb-4 px-3 py-2 rounded-[9px] text-[12px] flex items-center gap-2" 
+              style={{ background: "rgba(16,185,129,0.1)", border: "0.5px solid #10B981", color: "#10B981" }}>
+              <Check size={16} /> Successfully signed in! Redirecting...
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} noValidate>
+            <Field label="Email address" id="email" type="email" value={form.email} onChange={set("email")} placeholder="you@example.com" error={errors.email} icon={Mail} />
 
-            <Field
-              label="Email address" id="email" type="email"
-              value={form.email} onChange={set("email")}
-              placeholder="you@example.com" error={errors.email}
-              icon={Mail}
-            />
-
-            <Field
-              label="Password" id="password" type={showPw ? "text" : "password"}
-              value={form.password} onChange={set("password")}
-              placeholder="Your password" error={errors.password}
-              icon={Lock}
+            <Field label="Password" id="password" type={showPw ? "text" : "password"} value={form.password} onChange={set("password")} placeholder="Your password" error={errors.password} icon={Lock}
               rightSlot={
-                <button type="button" onClick={() => setShowPw(p => !p)}
-                  aria-label={showPw ? "Hide password" : "Show password"}
-                  className="absolute right-2.5 transition-colors duration-150"
-                  style={{ color:"#334155", background:"none", border:"none" }}
-                  onMouseEnter={e => e.currentTarget.style.color="#94A3B8"}
-                  onMouseLeave={e => e.currentTarget.style.color="#334155"}>
+                <button type="button" onClick={() => setShowPw(p => !p)} className="absolute right-2.5 transition-colors duration-150" style={{ color:"#334155" }}>
                   {showPw ? <EyeOff size={14} /> : <Eye size={14} />}
                 </button>
               }
             />
 
-            {/* Forgot password */}
             <div className="flex justify-end mb-5 -mt-1">
-              <Link href="/forgot-password"
-                className="text-[11px] transition-opacity hover:opacity-75"
-                style={{ color:ACC, ...F }}>
-                Forgot password?
-              </Link>
+              <Link href="/forgot-password" className="text-[11px] transition-opacity hover:opacity-75" style={{ color: ACC }}>Forgot password?</Link>
             </div>
 
-            {/* Submit */}
-            <motion.button
-              whileHover={{ scale:1.01 }} whileTap={{ scale:0.98 }}
-              type="submit" disabled={status !== "idle"}
+            <motion.button whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.98 }} type="submit" disabled={isLoading || success}
               className="w-full flex items-center justify-center gap-2 py-2.5 rounded-[10px] text-[13px] font-bold transition-all duration-300"
-              style={{
-                background: status === "success" ? "#10B981" : ACC,
-                color: "#07070E", ...F,
-                opacity: status === "loading" ? 0.7 : 1,
-              }}>
-              {status === "idle"    && <><span>Sign in</span><ArrowRight size={14} strokeWidth={2.5} /></>}
-              {status === "loading" && <><Loader2 size={14} className="animate-spin" /><span>Signing in…</span></>}
-              {status === "success" && <><Check size={14} strokeWidth={2.5} /><span>Signed in!</span></>}
+              style={{ background: success ? "#10B981" : ACC, color: "#07070E", ...F, opacity: isLoading ? 0.7 : 1 }}>
+              {isLoading && <><Loader2 size={14} className="animate-spin" /><span>Signing in…</span></>}
+              {success && <><Check size={14} strokeWidth={2.5} /><span>Signed in!</span></>}
+              {!isLoading && !success && <><span>Sign in</span><ArrowRight size={14} strokeWidth={2.5} /></>}
             </motion.button>
           </form>
 
-          {/* Divider */}
           <div className="flex items-center gap-2.5 my-4">
-            <div className="flex-1 h-px" style={{ background:"rgba(255,255,255,0.06)" }} />
-            <span className="text-[10px] tracking-wider" style={{ color:"#1E293B", ...F }}>or continue with</span>
-            <div className="flex-1 h-px" style={{ background:"rgba(255,255,255,0.06)" }} />
+            <div className="flex-1 h-px" style={{ background: "rgba(255,255,255,0.06)" }} />
+            <span className="text-[10px] tracking-wider" style={{ color: "#1E293B", ...F }}>or continue with</span>
+            <div className="flex-1 h-px" style={{ background: "rgba(255,255,255,0.06)" }} />
           </div>
 
-          {/* Google */}
           <button onClick={handleGoogle}
             className="w-full flex items-center justify-center gap-2 py-2.5 rounded-[10px] text-[12.5px] font-medium transition-all duration-200"
-            style={{ border:"0.5px solid rgba(255,255,255,0.08)", background:"transparent", color:"#475569", ...F }}
-            onMouseEnter={e => { e.currentTarget.style.borderColor="rgba(255,255,255,0.15)"; e.currentTarget.style.color="#CBD5E1"; }}
-            onMouseLeave={e => { e.currentTarget.style.borderColor="rgba(255,255,255,0.08)"; e.currentTarget.style.color="#475569"; }}>
+            style={{ border: "0.5px solid rgba(255,255,255,0.08)", background: "transparent", color: "#475569", ...F }}>
             <svg width="15" height="15" viewBox="0 0 24 24">
               <path fill="#EA4335" d="M5.27 12A6.73 6.73 0 0 1 12 5.27c1.7 0 3.23.63 4.41 1.66l3.29-3.29A11.25 11.25 0 0 0 12 .75 11.27 11.27 0 0 0 1.1 7.55l4.17 3.24V12Z"/>
               <path fill="#34A853" d="M12 23.25c3.04 0 5.6-1 7.46-2.72l-3.65-2.83a6.73 6.73 0 0 1-9.37-3.53L2.28 17.4A11.27 11.27 0 0 0 12 23.25Z"/>
@@ -303,14 +339,41 @@ export default function LoginPage() {
             Continue with Google
           </button>
 
-          <p className="text-center text-[11px] mt-4" style={{ color:"#1E293B", ...F }}>
+          <p className="text-center text-[11px] mt-4" style={{ color: "#1E293B", ...F }}>
             Don't have an account?{" "}
-            <Link href="/auth/register" className="font-medium hover:opacity-80" style={{ color:ACC }}>
+            <Link href="/auth/register" className="font-medium hover:opacity-80" style={{ color: ACC }}>
               Create one
             </Link>
           </p>
         </div>
       </div>
+
+      {/* Role Selection Modal */}
+      <AnimatePresence>
+        {showRoleModal && (
+          <div className="fixed inset-0 bg-black/90 z-[9999] flex items-center justify-center p-4">
+            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }}
+              className="bg-[#0C0B1A] rounded-3xl p-8 max-w-sm w-full border border-[#F4C430]/30">
+              <h2 className="text-2xl font-bold text-center mb-2">Choose your role</h2>
+              <p className="text-center text-[#94A3B8] mb-8">This defines your experience on Luminary</p>
+
+              <div className="space-y-4">
+                <button onClick={() => handleRoleSelect("Reader")} className="w-full p-6 rounded-2xl border hover:border-[#F4C430] text-left transition-all">
+                  <div className="text-4xl mb-3">📖</div>
+                  <h3 className="text-xl font-semibold">Reader</h3>
+                  <p className="text-sm text-gray-400">Browse and read books</p>
+                </button>
+
+                <button onClick={() => handleRoleSelect("Writer")} className="w-full p-6 rounded-2xl border hover:border-[#F4C430] text-left transition-all">
+                  <div className="text-4xl mb-3">✍️</div>
+                  <h3 className="text-xl font-semibold">Writer</h3>
+                  <p className="text-sm text-gray-400">Publish books and earn</p>
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
