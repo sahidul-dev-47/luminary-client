@@ -1,21 +1,14 @@
 import { auth } from "@/lib/auth";
 import { MongoClient } from "mongodb";
 
-export async function PATCH(request) {
+export async function PATCH(req) {
   let client;
 
   try {
-    const { role } = await request.json();
-
-    if (!role || !["Reader", "Writer"].includes(role)) {
-      return Response.json(
-        { error: "Invalid role" },
-        { status: 400 }
-      );
-    }
+    const { role } = await req.json();
 
     const session = await auth.api.getSession({
-      headers: request.headers,
+      headers: req.headers,
     });
 
     if (!session?.user?.email) {
@@ -36,30 +29,28 @@ export async function PATCH(request) {
       },
       {
         $set: {
-          role,
+          role: role,
           updatedAt: new Date(),
         },
       }
     );
 
-    if (!result.matchedCount) {
-      return Response.json(
-        { error: "User not found" },
-        { status: 404 }
-      );
-    }
-
     return Response.json({
       success: true,
-      role,
-      message: "Role updated successfully",
+      modifiedCount: result.modifiedCount,
     });
+
   } catch (error) {
-    console.error("Role update error:", error);
+    console.error("UPDATE ROLE ERROR:", error);
 
     return Response.json(
-      { error: "Failed to update role" },
-      { status: 500 }
+      {
+        success: false,
+        error: error.message,
+      },
+      {
+        status: 500,
+      }
     );
   } finally {
     if (client) {

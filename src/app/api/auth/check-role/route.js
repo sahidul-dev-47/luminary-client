@@ -24,11 +24,19 @@ export async function GET(request) {
       email: session.user.email,
     });
 
+    const account = await db.collection("account").findOne({
+      userId: user._id,
+    });
+
     return Response.json({
       authenticated: true,
       role: user?.role || null,
+      provider: account?.providerId || null,
     });
+
   } catch (error) {
+    console.error(error);
+
     return Response.json(
       { error: "Failed" },
       { status: 500 }
