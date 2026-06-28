@@ -26,7 +26,7 @@ const LuminaryIcon = ({ size = 34 }) => (
 
 const PUBLIC_LINKS = [
   { href: "/", label: "Home", Icon: Home },
-  { href: "/browse", label: "Browse", Icon: BookOpen },
+  { href: "/ebooks", label: "Browse", Icon: BookOpen },
 ];
 const PRIVATE_LINKS = [
   { href: "/dashboard", label: "Dashboard", Icon: LayoutDashboard },

@@ -3,9 +3,18 @@ const nextConfig = {
   /* config options here */
   reactCompiler: true,
   images: {
-  domains: ["images.unsplash.com"]
-},
+  
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '**', 
+      },
+      {
+        protocol: 'http',
+        hostname: '**',
+      },
+    ],
+  },
 };
-
 
 export default nextConfig;
