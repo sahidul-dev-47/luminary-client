@@ -23,7 +23,7 @@ const NAV = {
   ],
   Writer: [
     { href: '/dashboard/writer',           label: 'My Ebooks',     Icon: BookOpen              },
-    { href: '/dashboard/writer/add',       label: 'Add New Ebook', Icon: PlusCircle, accent: true },
+    { href: '/dashboard/writer/add-ebook',       label: 'Add New Ebook', Icon: PlusCircle, accent: true },
     { href: '/dashboard/writer/sales',     label: 'Sales History', Icon: BarChart3             },
     { href: '/dashboard/writer/bookmarks', label: 'Bookmarks',     Icon: Bookmark              },
   ],

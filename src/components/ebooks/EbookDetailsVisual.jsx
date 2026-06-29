@@ -197,20 +197,25 @@ export default function EbookDetailsVisual({ ebook, accentColor, accentRgb, date
         ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 2px; }
       `}</style>
 
-      {/* ── BG: blurred cover ── */}
-      <div className="fixed inset-0" style={{ zIndex: 0 }}>
-        <Image
-          src={ebook.coverImage}
-          alt=""
-          fill
-          aria-hidden="true"
-          className="object-cover object-center"
-          style={{
-            filter: "blur(80px) saturate(0.4) brightness(0.15)",
-            transform: "scale(1.1)",
-          }}
-          priority
-        />
+
+     
+
+    {/* ── BG: blurred cover ── */}
+      <div className="fixed inset-0 w-full h-full pointer-events-none" style={{ zIndex: 0 }}>
+        <div className="absolute inset-0 w-full h-full"> 
+          <Image
+            src={ebook.coverImage}
+            alt=""
+            fill
+            sizes="100vw"
+            className="object-cover object-center"
+            style={{
+              filter: "blur(80px) saturate(0.4) brightness(0.15)",
+              transform: "scale(1.1)",
+            }}
+            priority={false}
+          />
+        </div>
       </div>
 
       {/* ── Dark overlay ── */}
@@ -322,18 +327,22 @@ export default function EbookDetailsVisual({ ebook, accentColor, accentRgb, date
                 </div>
               </div>
 
-              {/* Cover image */}
+            
+             {/* Cover image */}
               <div
                 className="absolute inset-0 rounded-2xl overflow-hidden"
                 style={{ left: "18px" }}
               >
-                <Image
-                  src={ebook.coverImage}
-                  alt={ebook.title}
-                  fill
-                  className="object-cover"
-                  priority
-                />
+                <div className="relative w-full h-full"> 
+                  <Image
+                    src={ebook.coverImage}
+                    alt={ebook.title}
+                    fill
+                    className="object-cover"
+                    priority={true} 
+                    sizes="(max-width: 768px) 100vw, 320px"
+                  />
+                </div>
                 <div
                   className="absolute inset-0"
                   style={{
