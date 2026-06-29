@@ -20,13 +20,16 @@ import {
   Clock,
   Globe,
   Award,
+  CheckCircle2,
 } from "lucide-react";
 
 // ── Particle canvas ─────────────────────────────────────────────────────────
 function Particles({ rgb }) {
   const cvRef = useRef(null);
   const rgbRef = useRef(rgb);
-  useEffect(() => { rgbRef.current = rgb; }, [rgb]);
+  useEffect(() => {
+    rgbRef.current = rgb;
+  }, [rgb]);
 
   useEffect(() => {
     const cvs = cvRef.current;
@@ -92,7 +95,10 @@ function Stars({ rating = 4.8, accent }) {
           strokeWidth={1.5}
         />
       ))}
-      <span className="text-[12px] ml-1" style={{ color: accent, fontFamily: "'Inter',sans-serif" }}>
+      <span
+        className="text-[12px] ml-1"
+        style={{ color: accent, fontFamily: "'Inter',sans-serif" }}
+      >
         {rating}
       </span>
       <span className="text-[11px] text-slate-600 ml-0.5">(2.4k reviews)</span>
@@ -156,11 +162,17 @@ function StatCard({ icon: Icon, value, label, accent, rgb, delay = 0 }) {
 }
 
 // ── MAIN ─────────────────────────────────────────────────────────────────────
-export default function EbookDetailsVisual({ ebook, accentColor, accentRgb, dateStr }) {
+export default function EbookDetailsVisual({
+  ebook,
+  accentColor,
+  accentRgb,
+  dateStr,
+  user,
+}) {
   const [liked, setLiked] = useState(false);
   const [showShareToast, setShowShareToast] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
 
-  // Safety guard — ebook undefined হলে crash এড়াবে
   if (!ebook) return null;
 
   const color = accentColor;
@@ -180,6 +192,67 @@ export default function EbookDetailsVisual({ ebook, accentColor, accentRgb, date
     transition: { delay, duration: 0.55, ease: [0.22, 1, 0.36, 1] },
   });
 
+  const isWriter = user?.email === ebook.writerEmail;
+  const hasPurchased =
+    user?.purchasedEbooks?.includes(ebook._id?.toString() || ebook.id) || false;
+  const canBuy = !isWriter && !hasPurchased;
+
+  const handlePayment = async () => {
+    if (!user?.email) {
+      alert("Please login to make a purchase");
+      return;
+    }
+    if (isWriter) {
+      alert("You cannot buy your own ebook!");
+      return;
+    }
+    if (hasPurchased) {
+      alert("You have already purchased this ebook!");
+      return;
+    }
+
+    if (ebook.status === "Sold") {
+      alert("This ebook is already sold!");
+      return;
+    }
+
+    if (user.email === ebook.writerEmail) {
+      alert("You cannot buy your own ebook!");
+      return;
+    }
+
+    try {
+      setIsProcessing(true);
+
+      const response = await fetch("/api/checkout-sessions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ebookId: ebook._id?.toString() || ebook.id,
+          title: ebook.title,
+          price: parseFloat(ebook.price),
+          writerId: ebook.writerId || "unknown_writer",
+          buyerEmail: user.email,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data?.url) {
+        window.location.href = data.url;
+      } else {
+        console.error("Payment API Error:", data);
+        alert(data?.error || "Failed to initialize payment. Please try again.");
+      }
+    } catch (error) {
+      console.error("Payment Error:", error);
+      alert(
+        "Something went wrong. Please check your connection and try again.",
+      );
+    } finally {
+      setIsProcessing(false);
+    }
+  };
   return (
     <main className="min-h-screen bg-[#07070E] relative overflow-hidden">
       <style>{`
@@ -197,12 +270,12 @@ export default function EbookDetailsVisual({ ebook, accentColor, accentRgb, date
         ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 2px; }
       `}</style>
 
-
-     
-
-    {/* ── BG: blurred cover ── */}
-      <div className="fixed inset-0 w-full h-full pointer-events-none" style={{ zIndex: 0 }}>
-        <div className="absolute inset-0 w-full h-full"> 
+      {/* ── BG: blurred cover ── */}
+      <div
+        className="fixed inset-0 w-full h-full pointer-events-none"
+        style={{ zIndex: 0 }}
+      >
+        <div className="absolute inset-0 w-full h-full">
           <Image
             src={ebook.coverImage}
             alt=""
@@ -255,7 +328,6 @@ export default function EbookDetailsVisual({ ebook, accentColor, accentRgb, date
 
       {/* ── Page content ── */}
       <div className="relative z-10 max-w-[1180px] mx-auto px-4 sm:px-6 lg:px-10 pt-20 pb-24">
-
         {/* Back */}
         <motion.div {...fadeUp(0)} className="mb-10">
           <Link
@@ -278,10 +350,8 @@ export default function EbookDetailsVisual({ ebook, accentColor, accentRgb, date
 
         {/* ── Main grid ── */}
         <div className="grid grid-cols-1 lg:grid-cols-[340px_1fr] xl:grid-cols-[380px_1fr] gap-10 lg:gap-14 items-start">
-
           {/* ── LEFT column ── */}
           <div className="flex flex-col items-center lg:items-start gap-6">
-
             {/* Cover + spine */}
             <motion.div
               {...fadeUp(0.05)}
@@ -320,26 +390,28 @@ export default function EbookDetailsVisual({ ebook, accentColor, accentRgb, date
                 >
                   <span
                     className="text-[8px] font-bold tracking-[0.2em] uppercase"
-                    style={{ color: "rgba(7,7,14,0.7)", fontFamily: "'Inter',sans-serif" }}
+                    style={{
+                      color: "rgba(7,7,14,0.7)",
+                      fontFamily: "'Inter',sans-serif",
+                    }}
                   >
                     {ebook.genre}
                   </span>
                 </div>
               </div>
 
-            
-             {/* Cover image */}
+              {/* Cover image */}
               <div
                 className="absolute inset-0 rounded-2xl overflow-hidden"
                 style={{ left: "18px" }}
               >
-                <div className="relative w-full h-full"> 
+                <div className="relative w-full h-full">
                   <Image
                     src={ebook.coverImage}
                     alt={ebook.title}
                     fill
                     className="object-cover"
-                    priority={true} 
+                    priority={true}
                     sizes="(max-width: 768px) 100vw, 320px"
                   />
                 </div>
@@ -388,9 +460,30 @@ export default function EbookDetailsVisual({ ebook, accentColor, accentRgb, date
 
             {/* Stat cards */}
             <div className="grid grid-cols-3 gap-2 w-full max-w-[320px] lg:max-w-none">
-              <StatCard icon={Star}     value="4.8" label="Rating" accent={color} rgb={rgb} delay={0.14} />
-              <StatCard icon={BookOpen} value="320" label="Pages"  accent={color} rgb={rgb} delay={0.18} />
-              <StatCard icon={Globe}    value="EN"  label="Lang"   accent={color} rgb={rgb} delay={0.22} />
+              <StatCard
+                icon={Star}
+                value="4.8"
+                label="Rating"
+                accent={color}
+                rgb={rgb}
+                delay={0.14}
+              />
+              <StatCard
+                icon={BookOpen}
+                value="320"
+                label="Pages"
+                accent={color}
+                rgb={rgb}
+                delay={0.18}
+              />
+              <StatCard
+                icon={Globe}
+                value="EN"
+                label="Lang"
+                accent={color}
+                rgb={rgb}
+                delay={0.22}
+              />
             </div>
 
             {/* Save / Share */}
@@ -402,7 +495,9 @@ export default function EbookDetailsVisual({ ebook, accentColor, accentRgb, date
                 onClick={() => setLiked((l) => !l)}
                 className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm transition-all duration-200"
                 style={{
-                  background: liked ? `rgba(${rgb},0.12)` : "rgba(255,255,255,0.04)",
+                  background: liked
+                    ? `rgba(${rgb},0.12)`
+                    : "rgba(255,255,255,0.04)",
                   border: `0.5px solid ${liked ? `rgba(${rgb},0.3)` : "rgba(255,255,255,0.08)"}`,
                   color: liked ? color : "#475569",
                   fontFamily: "'Inter',sans-serif",
@@ -435,12 +530,24 @@ export default function EbookDetailsVisual({ ebook, accentColor, accentRgb, date
 
           {/* ── RIGHT column ── */}
           <div className="flex flex-col">
-
             {/* Pills */}
-            <motion.div {...fadeUp(0.08)} className="flex flex-wrap items-center gap-2 mb-5">
-              <Pill icon={Tag}      label={ebook.genre} accent={color}     rgb={rgb}          />
-              <Pill icon={Calendar} label={dateStr}      accent="#475569"   rgb="71,85,105"    />
-              <Pill icon={Award}    label="Verified"     accent="#10B981"   rgb="16,185,129"   />
+            <motion.div
+              {...fadeUp(0.08)}
+              className="flex flex-wrap items-center gap-2 mb-5"
+            >
+              <Pill icon={Tag} label={ebook.genre} accent={color} rgb={rgb} />
+              <Pill
+                icon={Calendar}
+                label={dateStr}
+                accent="#475569"
+                rgb="71,85,105"
+              />
+              <Pill
+                icon={Award}
+                label="Verified"
+                accent="#10B981"
+                rgb="16,185,129"
+              />
             </motion.div>
 
             {/* Title */}
@@ -485,7 +592,10 @@ export default function EbookDetailsVisual({ ebook, accentColor, accentRgb, date
                 >
                   {ebook.writerName || "Unknown Author"}
                 </p>
-                <p className="text-[11px] text-slate-600" style={{ fontFamily: "'Inter',sans-serif" }}>
+                <p
+                  className="text-[11px] text-slate-600"
+                  style={{ fontFamily: "'Inter',sans-serif" }}
+                >
                   {ebook.writerEmail}
                 </p>
               </div>
@@ -523,8 +633,8 @@ export default function EbookDetailsVisual({ ebook, accentColor, accentRgb, date
               className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-10"
             >
               {[
-                { icon: Clock,    label: "~4 hr read"      },
-                { icon: BookOpen, label: "DRM-free PDF"     },
+                { icon: Clock, label: "~4 hr read" },
+                { icon: BookOpen, label: "DRM-free PDF" },
                 { icon: Sparkles, label: "Instant download" },
               ].map(({ icon: Icon, label }) => (
                 <div
@@ -535,7 +645,11 @@ export default function EbookDetailsVisual({ ebook, accentColor, accentRgb, date
                     border: "0.5px solid rgba(255,255,255,0.07)",
                   }}
                 >
-                  <Icon size={13} style={{ color, flexShrink: 0 }} strokeWidth={1.8} />
+                  <Icon
+                    size={13}
+                    style={{ color, flexShrink: 0 }}
+                    strokeWidth={1.8}
+                  />
                   <span
                     className="text-[12px] text-slate-400"
                     style={{ fontFamily: "'Inter',sans-serif" }}
@@ -580,26 +694,44 @@ export default function EbookDetailsVisual({ ebook, accentColor, accentRgb, date
                   </span>
                 </div>
 
-                {/*
-                  ── Drop your EbookActions component here ──
-                  <EbookActions ebook={ebook} accentColor={color} accentRgb={rgb} />
-                */}
+                <div className="flex flex-col sm:flex-row gap-3 mt-2">
+                  {canBuy ? (
+                    /* Normal Buy Button */
+                    <button
+                      onClick={handlePayment}
+                      disabled={isProcessing}
+                      className="flex-1 flex items-center justify-center gap-2.5 py-3.5 rounded-xl text-[13.5px] font-semibold transition-all duration-200 hover:-translate-y-0.5 hover:opacity-90 disabled:opacity-70 disabled:cursor-not-allowed"
+                      style={{
+                        background: color,
+                        color: "#07070E",
+                        fontFamily: "'Inter',sans-serif",
+                        boxShadow: `0 4px 24px rgba(${rgb},0.28)`,
+                      }}
+                    >
+                      <ShoppingCart size={15} strokeWidth={2.5} />
+                      {isProcessing ? "Processing..." : "Buy Now"}
+                      <ChevronRight size={14} strokeWidth={2.5} />
+                    </button>
+                  ) : hasPurchased ? (
+                    /* Already Purchased */
+                    <button
+                      disabled
+                      className="flex-1 flex items-center justify-center gap-2.5 py-3.5 rounded-xl text-[13.5px] font-semibold bg-emerald-600 text-white cursor-default"
+                    >
+                      <CheckCircle2 size={18} />
+                      Already Purchased
+                    </button>
+                  ) : isWriter ? (
+                    /* Writer's Own Book */
+                    <button
+                      disabled
+                      className="flex-1 flex items-center justify-center gap-2.5 py-3.5 rounded-xl text-[13.5px] font-semibold bg-slate-700 text-slate-400 cursor-default"
+                    >
+                      Your Own Book
+                    </button>
+                  ) : null}
 
-                <div className="flex flex-col sm:flex-row gap-3">
-                  <button
-                    className="flex-1 flex items-center justify-center gap-2.5 py-3.5 rounded-xl text-[13.5px] font-semibold transition-all duration-200 hover:-translate-y-0.5 hover:opacity-90"
-                    style={{
-                      background: color,
-                      color: "#07070E",
-                      fontFamily: "'Inter',sans-serif",
-                      boxShadow: `0 4px 24px rgba(${rgb},0.28)`,
-                    }}
-                  >
-                    <ShoppingCart size={15} strokeWidth={2.5} />
-                    Buy Now
-                    <ChevronRight size={14} strokeWidth={2.5} />
-                  </button>
-
+                  {/* Preview Button */}
                   <button
                     className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-xl text-[13.5px] font-medium transition-all duration-200 hover:text-slate-200"
                     style={{
@@ -639,7 +771,9 @@ export default function EbookDetailsVisual({ ebook, accentColor, accentRgb, date
           >
             Browse more
           </span>
-          {[...new Set(["Fiction", ebook.genre, "New releases", "Staff picks"])].map((tag, i) => (
+          {[
+            ...new Set(["Fiction", ebook.genre, "New releases", "Staff picks"]),
+          ].map((tag, i) => (
             <Link
               key={`${tag}-${i}`}
               href={`/browse?genre=${tag}`}

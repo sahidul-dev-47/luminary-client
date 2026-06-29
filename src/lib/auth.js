@@ -1,6 +1,7 @@
 import { betterAuth } from "better-auth";
 import { MongoClient } from "mongodb";
 import { mongodbAdapter } from "better-auth/adapters/mongodb";
+import { admin } from "better-auth/plugins";
 
 const client = new MongoClient(process.env.MONGODB_URI);
 const db = client.db("luminary_db");
@@ -45,17 +46,8 @@ export const auth = betterAuth({
       role: user.role,
     }),
   },
-
-  // 🔥 এই অংশটা যোগ করো — Google এর জন্য Role সেট করবে
-  // onUserCreate: async (user) => {
-  //   if (user.provider === "google" && (!user.role || user.role === "")) {
-  //     // Google ইউজারের জন্য ডিফল্ট রোল
-  //     const usersCollection = db.collection("user");
-      
-  //     await usersCollection.updateOne(
-  //       { id: user.id },
-  //       { $set: { role: "Reader" } }   // এখানে চাইলে "Writer" বা অন্য কিছু দিতে পারো
-  //     );
-  //   }
-  // },
+ plugins:[
+  admin()
+ ]
+  
 });

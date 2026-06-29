@@ -1,6 +1,7 @@
 // app/ebooks/[id]/page.jsx  — SERVER COMPONENT (no "use client")
 
 import EbookDetailsVisual from "@/components/ebooks/EbookDetailsVisual";
+import { getUserSession } from "@/lib/core/session";
 import { ShieldAlert } from "lucide-react";
 import Link from "next/link";
 
@@ -27,6 +28,7 @@ async function getEbookDetails(id) {
 }
 
 export default async function EbookDetailsPage(props) {
+  const user = await getUserSession()
   const params = await props.params;
   const id = params.id;
   const ebook = await getEbookDetails(id);
@@ -46,6 +48,7 @@ export default async function EbookDetailsPage(props) {
       accentColor={color}
       accentRgb={rgb}
       dateStr={dateStr}
+      user={user}
     />
   );
 }
