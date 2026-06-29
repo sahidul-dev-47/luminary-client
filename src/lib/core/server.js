@@ -24,7 +24,7 @@ export const protectedFetch = async (path) => {
         }
     );
 
-    // handle 401, 403
+
 
     return handleStatusCode(res);
 }
