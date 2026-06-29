@@ -214,7 +214,7 @@ export default function RegisterPage() {
     email: "",
     password: "",
     confirmPassword: "",
-    role: "reader",
+    role: "Reader",
   });
   const [errors, setErrors] = useState({});
   const [apiError, setApiError] = useState("");

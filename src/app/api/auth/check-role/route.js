@@ -1,3 +1,4 @@
+// app/api/auth/check-role/route.js
 import { auth } from "@/lib/auth";
 import { MongoClient } from "mongodb";
 
@@ -10,9 +11,7 @@ export async function GET(request) {
     });
 
     if (!session?.user?.email) {
-      return Response.json({
-        authenticated: false,
-      });
+      return Response.json({ authenticated: false });
     }
 
     client = new MongoClient(process.env.MONGODB_URI);
@@ -24,23 +23,15 @@ export async function GET(request) {
       email: session.user.email,
     });
 
-    const account = await db.collection("account").findOne({
-      userId: user._id,
-    });
-
     return Response.json({
       authenticated: true,
       role: user?.role || null,
-      provider: account?.providerId || null,
+      provider: user?.provider || session.user.provider, 
     });
 
   } catch (error) {
-    console.error(error);
-
-    return Response.json(
-      { error: "Failed" },
-      { status: 500 }
-    );
+    console.error("Check Role Error:", error);
+    return Response.json({ authenticated: true, role: null }, { status: 200 });
   } finally {
     if (client) await client.close();
   }

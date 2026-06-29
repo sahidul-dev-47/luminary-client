@@ -176,24 +176,27 @@ export default function LoginPage() {
   
  useEffect(() => {
   const checkRole = async () => {
-    if (!session?.user?.email) return;
+    if (!session?.user) return;
 
     try {
       const res = await fetch("/api/auth/check-role");
-
       const data = await res.json();
 
+      
       if (!data.role) {
         setShowRoleModal(true);
       } else {
         router.push("/dashboard");
       }
     } catch (error) {
-      console.error(error);
+      console.error("Role check failed:", error);
+      setShowRoleModal(true);
     }
   };
 
-  checkRole();
+  if (session?.user) {
+    checkRole();
+  }
 }, [session, router]);
 
   const handleSubmit = async (ev) => {
