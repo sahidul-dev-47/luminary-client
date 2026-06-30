@@ -13,53 +13,51 @@ export default function PaymentSuccessContent() {
   const sessionId = searchParams.get("session_id");
 
   const [loading, setLoading] = useState(true);
-  const [statusMessage, setStatusMessage] = useState(
-    "Verifying your payment...",
-  );
+  const [statusMessage, setStatusMessage] = useState("Verifying your payment...");
 
   const effectRan = useRef(false);
 
   useEffect(() => {
     if (effectRan.current) return;
+    effectRan.current = true;
 
     if (success === "true" && sessionId) {
       const verifyAndSavePayment = async () => {
         try {
-          const response = await fetch(
-            "http://localhost:5000/api/v1/payments/verify-status",
-            {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ session_id: sessionId }),
-            },
-          );
+          
+          const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL 
+            ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/payments/verify-status`
+            : "http://localhost:5000/api/v1/payments/verify-status";
+
+          const response = await fetch(backendUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ session_id: sessionId }),
+          });
 
           const data = await response.json();
 
           if (data.success) {
-            setLoading(false);
-            setStatusMessage(
-              "Payment successful! Your library and profile have been updated.",
-            );
+            setStatusMessage("Payment successful! Your library and profile have been updated.");
           } else {
-            setLoading(false);
             setStatusMessage(data.message || "Payment verification failed.");
           }
         } catch (error) {
           console.error("Verification Error:", error);
-          setLoading(false);
           setStatusMessage("Something went wrong while updating database.");
+        } finally {
+          setLoading(false);
         }
       };
 
       verifyAndSavePayment();
-      effectRan.current = true;
     } else {
       setLoading(false);
       setStatusMessage("Invalid session or payment cancelled.");
     }
   }, [success, sessionId]);
 
+  
   return (
     <div
       className="max-w-md w-full rounded-2xl p-8 text-center relative z-10"
