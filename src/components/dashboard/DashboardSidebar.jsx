@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { signOut, useSession } from '@/lib/auth-client';
+import { authClient, signOut, } from '@/lib/auth-client';
 import {
   LogOut, Home, BookOpen, Bookmark, BarChart3,
   Users, PlusCircle, ShoppingCart, CreditCard,
@@ -269,7 +269,7 @@ const SIDEBAR_STYLE = {
 // ── Main export ────────────────────────────────────────────
 export default function DashboardSidebar() {
   const pathname         = usePathname();
-  const { data: session } = useSession();
+  const { data: session } = authClient.useSession();
 
   // ✅ Reads exact role from session — 'reader' | 'writer' | 'admin'
   const role  = session?.user?.role ?? 'Reader';

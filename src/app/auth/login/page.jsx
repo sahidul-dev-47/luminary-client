@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Mail, Lock, Eye, EyeOff, ArrowRight, Check, Loader2 } from "lucide-react";
-import { signIn, useSession } from "@/lib/auth-client";
+import { authClient, signIn,  } from "@/lib/auth-client";
 
 const F = { fontFamily: "'Inter','system-ui',sans-serif" };
 const FD = { fontFamily: "'Playfair Display',Georgia,serif" };
@@ -19,9 +19,9 @@ function LeftIllustration() {
     { text: "So many books, so little time.", author: "Frank Zappa" },
   ];
 
-  const [q, setQ] = useState(quotes[0]); // Default quote for server
+  const [q, setQ] = useState(quotes[0]); 
 
-  // Client side এ random quote সেট করা
+
   useEffect(() => {
     const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
     setQ(randomQuote);
@@ -148,7 +148,7 @@ function Field({ label, id, type, value, onChange, placeholder, error, icon: Ico
 // ── Main Login Page ──────────────────────────────────────────────
 export default function LoginPage() {
   const router = useRouter();
-  const { data: session } = useSession();
+  const { data: session } = authClient.useSession();
 
   const [form, setForm] = useState({ email: "", password: "" });
   const [errors, setErrors] = useState({});

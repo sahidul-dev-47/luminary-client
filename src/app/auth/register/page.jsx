@@ -14,7 +14,7 @@ import {
   Check,
   Loader2,
 } from "lucide-react";
-import { signUp, signIn, useSession } from "@/lib/auth-client";
+import { signUp, signIn, authClient } from "@/lib/auth-client";
 
 const F = { fontFamily: "'Inter','system-ui',sans-serif" };
 const FD = { fontFamily: "'Playfair Display',Georgia,serif" };
@@ -207,7 +207,7 @@ function Field({
 // ── Main Register Page ──────────────────────────────────────────────
 export default function RegisterPage() {
   const router = useRouter();
-  const { data: session } = useSession();
+  const { data: session } = authClient.useSession();
 
   const [form, setForm] = useState({
     fullName: "",

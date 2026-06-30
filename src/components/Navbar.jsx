@@ -8,7 +8,7 @@ import {
   Home, BookOpen, LayoutDashboard,
   LogIn, UserPlus, Menu, X, LogOut,
 } from "lucide-react";
-import { signOut, useSession } from "@/lib/auth-client";
+import { authClient, signOut } from "@/lib/auth-client";
 
 const LuminaryIcon = ({ size = 34 }) => (
   <svg width={size} height={size} viewBox="0 0 38 38" fill="none">
@@ -38,7 +38,7 @@ export default function Navbar() {
   const [scrolled, setScroll] = useState(false);
 
   // ✅ Authentication using useSession
-  const { data: session, isPending: loading } = useSession();
+  const { data: session, isPending: loading } = authClient.useSession();
   const user = session?.user;
 
   const handleLogout = async () => {

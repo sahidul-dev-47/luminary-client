@@ -1,8 +1,7 @@
 "use client";
 
 // ─────────────────────────────────────────────────────────────────────────────
-// FILE: src/app/dashboard/writer/add-ebook/page.jsx
-// Writer — Add Ebook form with imgBB image upload + preview
+//
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { useState, useRef } from "react";
@@ -13,8 +12,9 @@ import {
   DollarSign, BookOpen, FileText, Tag, ImageIcon,
   Loader2, Eye, EyeOff, ChevronDown,
 } from "lucide-react";
-import { useSession } from "@/lib/auth-client";
+
 import { createEbook } from "@/lib/actions/ebook";
+import { authClient } from "@/lib/auth-client";
 
 const GENRES = [
   "Fiction", "Mystery", "Romance", "Sci-Fi",
@@ -95,7 +95,7 @@ const inputFocusStyle = `
 
 export default function AddEbookFormPage() {
   const router = useRouter();
-  const { data: session } = useSession(); 
+  const { data: session } = authClient.useSession(); 
 
   const [form, setForm] = useState({
     title:       "",
