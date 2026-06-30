@@ -211,10 +211,6 @@ export default function EbookDetailsVisual({
       return;
     }
 
-    if (ebook.status === "Sold") {
-      alert("This ebook is already sold!");
-      return;
-    }
 
     if (user.email === ebook.writerEmail) {
       alert("You cannot buy your own ebook!");
@@ -695,25 +691,8 @@ export default function EbookDetailsVisual({
                 </div>
 
                 <div className="flex flex-col sm:flex-row gap-3 mt-2">
-                  {canBuy ? (
-                    /* Normal Buy Button */
-                    <button
-                      onClick={handlePayment}
-                      disabled={isProcessing}
-                      className="flex-1 flex items-center justify-center gap-2.5 py-3.5 rounded-xl text-[13.5px] font-semibold transition-all duration-200 hover:-translate-y-0.5 hover:opacity-90 disabled:opacity-70 disabled:cursor-not-allowed"
-                      style={{
-                        background: color,
-                        color: "#07070E",
-                        fontFamily: "'Inter',sans-serif",
-                        boxShadow: `0 4px 24px rgba(${rgb},0.28)`,
-                      }}
-                    >
-                      <ShoppingCart size={15} strokeWidth={2.5} />
-                      {isProcessing ? "Processing..." : "Buy Now"}
-                      <ChevronRight size={14} strokeWidth={2.5} />
-                    </button>
-                  ) : hasPurchased ? (
-                    /* Already Purchased */
+                  {hasPurchased ? (
+                    /* Already Purchased by current user */
                     <button
                       disabled
                       className="flex-1 flex items-center justify-center gap-2.5 py-3.5 rounded-xl text-[13.5px] font-semibold bg-emerald-600 text-white cursor-default"
@@ -729,9 +708,26 @@ export default function EbookDetailsVisual({
                     >
                       Your Own Book
                     </button>
-                  ) : null}
+                  ) : (
+                    /* Buy Now Button - Anyone can buy */
+                    <button
+                      onClick={handlePayment}
+                      disabled={isProcessing}
+                      className="flex-1 flex items-center justify-center gap-2.5 py-3.5 rounded-xl text-[13.5px] font-semibold transition-all duration-200 hover:-translate-y-0.5 hover:opacity-90 disabled:opacity-70 disabled:cursor-not-allowed"
+                      style={{
+                        background: color,
+                        color: "#07070E",
+                        fontFamily: "'Inter',sans-serif",
+                        boxShadow: `0 4px 24px rgba(${rgb},0.28)`,
+                      }}
+                    >
+                      <ShoppingCart size={15} strokeWidth={2.5} />
+                      {isProcessing ? "Processing..." : "Buy Now"}
+                      <ChevronRight size={14} strokeWidth={2.5} />
+                    </button>
+                  )}
 
-                  {/* Preview Button */}
+                  {/* Preview Button - Always visible */}
                   <button
                     className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-xl text-[13.5px] font-medium transition-all duration-200 hover:text-slate-200"
                     style={{
@@ -745,7 +741,6 @@ export default function EbookDetailsVisual({
                     Preview sample
                   </button>
                 </div>
-
                 <p
                   className="text-center text-[11px] text-slate-700 mt-4"
                   style={{ fontFamily: "'Inter',sans-serif" }}
