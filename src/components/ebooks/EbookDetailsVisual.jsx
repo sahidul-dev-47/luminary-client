@@ -161,7 +161,6 @@ function StatCard({ icon: Icon, value, label, accent, rgb, delay = 0 }) {
   );
 }
 
-// ── MAIN ─────────────────────────────────────────────────────────────────────
 export default function EbookDetailsVisual({
   ebook,
   accentColor,
@@ -172,11 +171,20 @@ export default function EbookDetailsVisual({
   const [liked, setLiked] = useState(false);
   const [showShareToast, setShowShareToast] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [buttonText, setButtonText] = useState("Buy Now");
+  const [isBookmarked, setIsBookmarked] = useState(false);
 
   if (!ebook) return null;
 
   const color = accentColor;
   const rgb = accentRgb;
+
+  // Improved Purchase Logic
+  const ebookIdStr = ebook._id?.toString() || ebook.id?.toString();
+
+  const isWriter = user?.email === ebook.writerEmail;
+  const hasPurchased =
+    user?.purchasedEbooks?.some((id) => id?.toString() === ebookIdStr) || false;
 
   const handleShare = () => {
     if (typeof navigator !== "undefined") {
@@ -185,6 +193,43 @@ export default function EbookDetailsVisual({
     setShowShareToast(true);
     setTimeout(() => setShowShareToast(false), 2200);
   };
+  const handleBookmark = async () => {
+    if (!user?.email) {
+      alert("Please login to bookmark");
+      return;
+    }
+
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/users/bookmark`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: user.email,
+            ebookId: ebookIdStr,
+          }),
+        },
+      );
+
+      const data = await res.json();
+
+      if (data.success) {
+        setIsBookmarked(!isBookmarked); 
+      } else {
+        alert(data.message || "Failed");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Something went wrong");
+    }
+  };
+  useEffect(() => {
+    const ebookIdStr = ebook._id?.toString() || ebook.id?.toString();
+    if (user?.bookmarks?.includes(ebookIdStr)) {
+      setIsBookmarked(true);
+    }
+  }, [user, ebook]);
 
   const fadeUp = (delay = 0) => ({
     initial: { opacity: 0, y: 20 },
@@ -192,10 +237,18 @@ export default function EbookDetailsVisual({
     transition: { delay, duration: 0.55, ease: [0.22, 1, 0.36, 1] },
   });
 
-  const isWriter = user?.email === ebook.writerEmail;
-  const hasPurchased =
-    user?.purchasedEbooks?.includes(ebook._id?.toString() || ebook.id) || false;
-  const canBuy = !isWriter && !hasPurchased;
+  
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get("success") === "true") {
+      window.location.reload();
+    }
+  }, []);
+
+  if (hasPurchased) {
+    setButtonText("Already Purchased");
+    return;
+  }
 
   const handlePayment = async () => {
     if (!user?.email) {
@@ -211,12 +264,6 @@ export default function EbookDetailsVisual({
       return;
     }
 
-
-    if (user.email === ebook.writerEmail) {
-      alert("You cannot buy your own ebook!");
-      return;
-    }
-
     try {
       setIsProcessing(true);
 
@@ -224,7 +271,7 @@ export default function EbookDetailsVisual({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          ebookId: ebook._id?.toString() || ebook.id,
+          ebookId: ebookIdStr,
           title: ebook.title,
           price: parseFloat(ebook.price),
           writerId: ebook.writerId || "unknown_writer",
@@ -249,6 +296,7 @@ export default function EbookDetailsVisual({
       setIsProcessing(false);
     }
   };
+
   return (
     <main className="min-h-screen bg-[#07070E] relative overflow-hidden">
       <style>{`
@@ -482,43 +530,45 @@ export default function EbookDetailsVisual({
               />
             </div>
 
-            {/* Save / Share */}
+            {/* Save / Bookmark + Share Buttons */}
+            {/* Love / Bookmark Button */}
             <motion.div
               {...fadeUp(0.2)}
               className="flex items-center gap-3 w-full max-w-[320px] lg:max-w-none"
             >
               <button
-                onClick={() => setLiked((l) => !l)}
-                className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm transition-all duration-200"
+                onClick={handleBookmark}
+                className="flex-1 flex items-center justify-center gap-2.5 py-3 rounded-xl text-sm font-medium transition-all duration-200 active:scale-[0.95]"
                 style={{
-                  background: liked
-                    ? `rgba(${rgb},0.12)`
+                  background: isBookmarked
+                    ? "rgba(239, 68, 68, 0.15)" // Red tint when bookmarked
                     : "rgba(255,255,255,0.04)",
-                  border: `0.5px solid ${liked ? `rgba(${rgb},0.3)` : "rgba(255,255,255,0.08)"}`,
-                  color: liked ? color : "#475569",
+                  border: `0.5px solid ${isBookmarked ? "rgba(239, 68, 68, 0.4)" : "rgba(255,255,255,0.09)"}`,
+                  color: isBookmarked ? "#ef4444" : "#475569",
                   fontFamily: "'Inter',sans-serif",
                 }}
               >
                 <Heart
-                  size={14}
-                  fill={liked ? color : "transparent"}
-                  stroke={liked ? color : "#475569"}
-                  strokeWidth={1.5}
+                  size={18}
+                  fill={isBookmarked ? "#ef4444" : "transparent"}
+                  stroke={isBookmarked ? "#ef4444" : "#475569"}
+                  strokeWidth={1.7}
+                  className="transition-all duration-200"
                 />
-                {liked ? "Saved" : "Save"}
+                {isBookmarked ? "Loved" : "Love"}
               </button>
 
               <button
                 onClick={handleShare}
-                className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm transition-all duration-200 hover:text-slate-200"
+                className="flex-1 flex items-center justify-center gap-2.5 py-3 rounded-xl text-sm font-medium transition-all duration-200 hover:text-slate-200 active:scale-[0.95]"
                 style={{
                   background: "rgba(255,255,255,0.04)",
-                  border: "0.5px solid rgba(255,255,255,0.08)",
+                  border: "0.5px solid rgba(255,255,255,0.09)",
                   color: "#475569",
                   fontFamily: "'Inter',sans-serif",
                 }}
               >
-                <Share2 size={14} strokeWidth={1.5} />
+                <Share2 size={16} strokeWidth={1.6} />
                 Share
               </button>
             </motion.div>
@@ -657,17 +707,18 @@ export default function EbookDetailsVisual({
             </motion.div>
 
             {/* CTA card */}
+            {/* CTA card */}
             <motion.div {...fadeUp(0.28)}>
               <div
-                className="rounded-2xl p-5 sm:p-6"
+                className="rounded-2xl p-6 sm:p-7"
                 style={{
                   background: "rgba(255,255,255,0.025)",
-                  border: `0.5px solid rgba(${rgb},0.15)`,
+                  border: `0.5px solid rgba(${rgb},0.18)`,
                   backdropFilter: "blur(16px)",
                 }}
               >
                 {/* Price */}
-                <div className="flex items-end gap-3 mb-5">
+                <div className="flex items-end gap-3 mb-6">
                   <span
                     className="text-4xl font-bold"
                     style={{ color, fontFamily: "'Playfair Display',serif" }}
@@ -690,59 +741,70 @@ export default function EbookDetailsVisual({
                   </span>
                 </div>
 
-                <div className="flex flex-col sm:flex-row gap-3 mt-2">
+                <div className="flex flex-col sm:flex-row gap-3">
                   {hasPurchased ? (
-                    /* Already Purchased by current user */
                     <button
                       disabled
-                      className="flex-1 flex items-center justify-center gap-2.5 py-3.5 rounded-xl text-[13.5px] font-semibold bg-emerald-600 text-white cursor-default"
+                      className="flex-1 flex items-center justify-center gap-3 py-4 rounded-2xl text-[14.5px] font-semibold shadow-lg"
+                      style={{
+                        background: "#10B981",
+                        color: "#ffffff",
+                        boxShadow: "0 10px 35px rgba(16, 185, 129, 0.4)",
+                      }}
                     >
-                      <CheckCircle2 size={18} />
-                      Already Purchased
+                      <CheckCircle2 size={22} strokeWidth={2.5} />
+                      Already Purchased ✓
                     </button>
                   ) : isWriter ? (
-                    /* Writer's Own Book */
                     <button
                       disabled
-                      className="flex-1 flex items-center justify-center gap-2.5 py-3.5 rounded-xl text-[13.5px] font-semibold bg-slate-700 text-slate-400 cursor-default"
+                      className="flex-1 flex items-center justify-center gap-3 py-4 rounded-2xl text-[14.5px] font-semibold"
+                      style={{
+                        background: "rgba(51, 65, 85, 0.85)",
+                        color: "#94A3B8",
+                        border: "1px solid rgba(148, 163, 184, 0.3)",
+                      }}
                     >
                       Your Own Book
                     </button>
                   ) : (
-                    /* Buy Now Button - Anyone can buy */
+                    /* Buy Now Button */
                     <button
                       onClick={handlePayment}
                       disabled={isProcessing}
-                      className="flex-1 flex items-center justify-center gap-2.5 py-3.5 rounded-xl text-[13.5px] font-semibold transition-all duration-200 hover:-translate-y-0.5 hover:opacity-90 disabled:opacity-70 disabled:cursor-not-allowed"
+                      className="flex-1 flex items-center justify-center gap-3 py-4 rounded-2xl text-[14.5px] font-semibold transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.985] disabled:opacity-70 disabled:cursor-not-allowed shadow-xl"
                       style={{
                         background: color,
                         color: "#07070E",
                         fontFamily: "'Inter',sans-serif",
-                        boxShadow: `0 4px 24px rgba(${rgb},0.28)`,
+                        fontWeight: 600,
+                        boxShadow: `0 12px 40px rgba(${rgb}, 0.4)`,
                       }}
                     >
-                      <ShoppingCart size={15} strokeWidth={2.5} />
+                      <ShoppingCart size={19} strokeWidth={2.5} />
                       {isProcessing ? "Processing..." : "Buy Now"}
-                      <ChevronRight size={14} strokeWidth={2.5} />
+                      <ChevronRight size={17} strokeWidth={3} />
                     </button>
                   )}
 
-                  {/* Preview Button - Always visible */}
+                  {/* Preview Button */}
                   <button
-                    className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-xl text-[13.5px] font-medium transition-all duration-200 hover:text-slate-200"
+                    className="flex-1 flex items-center justify-center gap-3 py-4 rounded-2xl text-[14.5px] font-medium transition-all duration-200 hover:bg-white/10 hover:text-slate-200 active:scale-[0.985]"
                     style={{
-                      background: "rgba(255,255,255,0.04)",
-                      border: "0.5px solid rgba(255,255,255,0.1)",
-                      color: "#475569",
+                      background: "rgba(255,255,255,0.06)",
+                      border: "1px solid rgba(255,255,255,0.15)",
+                      color: "#CBD5E1",
                       fontFamily: "'Inter',sans-serif",
-                      backdropFilter: "blur(8px)",
+                      backdropFilter: "blur(12px)",
                     }}
                   >
-                    Preview sample
+                    <BookOpen size={18} strokeWidth={2} />
+                    Preview Sample
                   </button>
                 </div>
+
                 <p
-                  className="text-center text-[11px] text-slate-700 mt-4"
+                  className="text-center text-[11px] text-slate-600 mt-5"
                   style={{ fontFamily: "'Inter',sans-serif" }}
                 >
                   🔒 Secure checkout · Instant delivery · 30-day refund

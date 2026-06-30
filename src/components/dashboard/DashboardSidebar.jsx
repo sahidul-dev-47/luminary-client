@@ -17,10 +17,11 @@ const F  = "'Inter',system-ui,sans-serif";
 
 const NAV = {
   Reader: [
-    { href: '/dashboard/reader',           label: 'My Purchases', Icon: ShoppingCart },
-    { href: '/dashboard/reader/bookmarks', label: 'Bookmarks',    Icon: Bookmark     },
-    { href: '/dashboard/reader/profile',   label: 'Profile',      Icon: Settings     },
-  ],
+  { href: '/dashboard/reader',                    label: 'Purchase History', Icon: ShoppingCart },
+  { href: '/dashboard/reader/library',          label: 'My Library',       Icon: BookOpen     },
+  { href: '/dashboard/reader/bookmarks',          label: 'Bookmarks',        Icon: Bookmark     },
+  { href: '/dashboard/reader/profile',            label: 'Profile',          Icon: Settings     },
+],
   Writer: [
     { href: '/dashboard/writer',           label: 'My Ebooks',     Icon: BookOpen              },
     { href: '/dashboard/writer/add-ebook',       label: 'Add New Ebook', Icon: PlusCircle, accent: true },
@@ -271,7 +272,7 @@ export default function DashboardSidebar() {
   const pathname         = usePathname();
   const { data: session } = authClient.useSession();
 
-  // ✅ Reads exact role from session — 'reader' | 'writer' | 'admin'
+  
   const role  = session?.user?.role ?? 'Reader';
   const rm    = ROLE_META[role]  ?? ROLE_META.Reader;
   const links = NAV[role]        ?? NAV.Reader;
