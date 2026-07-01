@@ -22,6 +22,7 @@ import {
   Award,
   CheckCircle2,
 } from "lucide-react";
+import { authClient } from "@/lib/auth-client";
 
 // ── Particle canvas ─────────────────────────────────────────────────────────
 function Particles({ rgb }) {
@@ -174,6 +175,8 @@ export default function EbookDetailsVisual({
   const [buttonText, setButtonText] = useState("Buy Now");
   const [isBookmarked, setIsBookmarked] = useState(false);
 
+  const { data: session } = authClient.useSession();
+
   if (!ebook) return null;
 
   const color = accentColor;
@@ -200,11 +203,22 @@ export default function EbookDetailsVisual({
     }
 
     try {
+      // Better way (useSession hook component e call korte hoy)
+      const token = session?.session?.token;
+
+      if (!token) {
+        alert("Session expired. Please login again.");
+        return;
+      }
+
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/users/bookmark`,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
           body: JSON.stringify({
             email: user.email,
             ebookId: ebookIdStr,
@@ -215,13 +229,14 @@ export default function EbookDetailsVisual({
       const data = await res.json();
 
       if (data.success) {
-        setIsBookmarked(!isBookmarked); 
+        setIsBookmarked(!isBookmarked);
+        alert(data.message || "Bookmark updated successfully");
       } else {
-        alert(data.message || "Failed");
+        alert(data.message || "Failed to bookmark");
       }
     } catch (err) {
-      console.error(err);
-      alert("Something went wrong");
+      console.error("Bookmark Error:", err);
+      alert("Something went wrong. Please check backend server.");
     }
   };
   useEffect(() => {
@@ -237,7 +252,6 @@ export default function EbookDetailsVisual({
     transition: { delay, duration: 0.55, ease: [0.22, 1, 0.36, 1] },
   });
 
-  
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get("success") === "true") {
@@ -249,7 +263,6 @@ export default function EbookDetailsVisual({
     setButtonText("Already Purchased");
     return;
   }
-
   const handlePayment = async () => {
     if (!user?.email) {
       alert("Please login to make a purchase");
@@ -274,7 +287,8 @@ export default function EbookDetailsVisual({
           ebookId: ebookIdStr,
           title: ebook.title,
           price: parseFloat(ebook.price),
-          writerId: ebook.writerId || "unknown_writer",
+          writerId: ebook.writerId || ebook.writerEmail || "unknown",
+          writerEmail: ebook.writerEmail || ebook.writerId || "unknown",
           buyerEmail: user.email,
         }),
       });

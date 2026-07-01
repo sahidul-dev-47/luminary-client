@@ -37,7 +37,7 @@ export default function Navbar() {
   const [menuOpen, setMenu] = useState(false);
   const [scrolled, setScroll] = useState(false);
 
-  // ✅ Authentication using useSession
+  //  Authentication using useSession
   const { data: session, isPending: loading } = authClient.useSession();
   const user = session?.user;
 

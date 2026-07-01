@@ -29,7 +29,7 @@ export default function RootLayout({ children }) {
       lang="en"
       className={`${playfair.variable} ${inter.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-[#0D0D1A] text-[#F8FAFC]">
+      <body className="min-h-full flex flex-col bg-[#0D0D1A] text-[#F8FAFC]bg-[#0A0918] antialiased overflow-x-hidden">
         <Navbar />
         <main className="flex-1 pt-16">{children}</main>
         <Footer></Footer>
