@@ -9,7 +9,7 @@ const FD = "'Playfair Display',Georgia,serif";
 
 async function getEbooks(sp) {
   try {
-    const baseUrl = process.env.NEXT_BASE_PUBLIC_URL || "http://localhost:5000";
+    const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000";
     const params = new URLSearchParams();
     if (sp?.search) params.set("search", sp.search);
     if (sp?.genre) params.set("genre", sp.genre);
