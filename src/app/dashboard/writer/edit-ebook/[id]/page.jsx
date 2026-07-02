@@ -1,14 +1,10 @@
 "use client";
 
-// ─────────────────────────────────────────────────────────────────────────────
-//
-// ─────────────────────────────────────────────────────────────────────────────
-
-import { useState, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
+import { useRouter, useParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  BookPlus,
+  Pencil,
   Upload,
   X,
   CheckCircle2,
@@ -19,14 +15,14 @@ import {
   Tag,
   ImageIcon,
   Loader2,
-  ImageIcon as _Unused,
-  Clock,
-  Info,
   ChevronDown,
+  ArrowLeft,
 } from "lucide-react";
 
-import { createEbook } from "@/lib/actions/ebook";
+import { updateEbook } from "@/lib/actions/ebook";
 import { authClient } from "@/lib/auth-client";
+
+const API_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 
 const GENRES = [
   "Fiction",
@@ -46,14 +42,12 @@ const GENRES = [
   "Technology",
   "History",
   "Medicine & Health",
-  "Religion"
+  "Religion",
 ];
 
 const ACCENT = "#F4C430";
-const SUCCESS = "#4ADE80";
 const ACCENT_RGB = "244,196,48";
 
-// ── imgBB upload helper ──────────────────────────────────
 async function uploadToImgBB(file) {
   const formData = new FormData();
   formData.append("image", file);
@@ -63,10 +57,9 @@ async function uploadToImgBB(file) {
   );
   if (!res.ok) throw new Error("Image upload failed");
   const data = await res.json();
-  return data.data.url; // direct image URL
+  return data.data.url;
 }
 
-// ── Field wrapper ────────────────────────────────────────
 function Field({ label, required, error, hint, children }) {
   return (
     <div className="flex flex-col gap-1.5">
@@ -106,7 +99,6 @@ function Field({ label, required, error, hint, children }) {
   );
 }
 
-// ── Shared input style ───────────────────────────────────
 const inputBase = {
   background: "rgba(255,255,255,0.03)",
   border: "0.5px solid rgba(255,255,255,0.1)",
@@ -127,10 +119,11 @@ const inputFocusStyle = `
   .fable-textarea { resize: vertical; min-height: 120px; }
 `;
 
-export default function AddEbookFormPage() {
+export default function EditEbookFormPage() {
   const router = useRouter();
+  const { id } = useParams();
   const { data: session } = authClient.useSession();
-  console.log("session.user:", session?.user);
+  const user = session?.user;
 
   const [form, setForm] = useState({
     title: "",
@@ -139,8 +132,14 @@ export default function AddEbookFormPage() {
     genre: "",
   });
   const [errors, setErrors] = useState({});
-  const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
+  const [imageFile, setImageFile] = useState(null);
+  const [existingCover, setExistingCover] = useState(null);
+
+  const [loadingEbook, setLoadingEbook] = useState(true);
+  const [notFound, setNotFound] = useState(false);
+  const [forbidden, setForbidden] = useState(false);
+
   const [uploading, setUploading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -148,7 +147,51 @@ export default function AddEbookFormPage() {
   const [isDragging, setIsDragging] = useState(false);
   const fileRef = useRef(null);
 
-  // ── Validation ────────────────────────────────────────
+  // ── Load existing ebook ──────────────────────────────
+  useEffect(() => {
+    if (!user?.id || !id) return;
+
+    const fetchEbook = async () => {
+      setLoadingEbook(true);
+      try {
+        const res = await fetch(
+          `${API_URL}/api/v1/writer/ebooks/${id}?writerId=${user.id}`,
+        );
+
+        if (res.status === 403) {
+          setForbidden(true);
+          return;
+        }
+        if (res.status === 404) {
+          setNotFound(true);
+          return;
+        }
+
+        const data = await res.json();
+        if (!data.success) {
+          setNotFound(true);
+          return;
+        }
+
+        const ebook = data.ebook;
+        setForm({
+          title: ebook.title || "",
+          description: ebook.description || "",
+          price: ebook.price?.toString() || "",
+          genre: ebook.genre || "",
+        });
+        setExistingCover(ebook.coverImage || null);
+      } catch (err) {
+        console.error("Failed to load ebook", err);
+        setNotFound(true);
+      } finally {
+        setLoadingEbook(false);
+      }
+    };
+
+    fetchEbook();
+  }, [id, user?.id]);
+
   function validate() {
     const e = {};
     if (!form.title.trim()) e.title = "Title is required";
@@ -160,11 +203,9 @@ export default function AddEbookFormPage() {
     if (form.price === "") e.price = "Price is required";
     else if (isNaN(form.price) || Number(form.price) < 0)
       e.price = "Enter a valid price (0 or more)";
-    if (!imageFile) e.image = "Cover image is required";
     return e;
   }
 
-  // ── Image pick ────────────────────────────────────────
   function handleImageChange(file) {
     if (!file) return;
     if (!file.type.startsWith("image/"))
@@ -184,7 +225,6 @@ export default function AddEbookFormPage() {
     handleImageChange(e.dataTransfer.files[0]);
   }
 
-  // ── Submit
   async function handleSubmit(e) {
     e.preventDefault();
     setServerError("");
@@ -195,42 +235,30 @@ export default function AddEbookFormPage() {
     }
 
     try {
-      setUploading(true);
-      const coverImage = await uploadToImgBB(imageFile);
-      setUploading(false);
+      let coverImage = existingCover;
 
-      setSubmitting(true);
-      const writerId = session?.user?.id || session?.user?._id;
-      const writerName =
-        session?.user?.name || session?.session?.user?.name || "Unknown Author";
-      const writerEmail =
-        session?.user?.email ||
-        session?.session?.user?.email ||
-        "unknown@fable.com";
-
-      if (!writerId) {
-        setServerError("You must be logged in to add an ebook.");
-        return;
+      if (imageFile) {
+        setUploading(true);
+        coverImage = await uploadToImgBB(imageFile);
+        setUploading(false);
       }
 
-      const resData = await createEbook({
+      setSubmitting(true);
+
+      const resData = await updateEbook(id, {
+        writerId: user.id,
         title: form.title,
-        writerId,
-        writerName,
-        writerEmail,
         description: form.description,
-        fullContent: "Full content text goes here...",
         price: Number(form.price),
         genre: form.genre,
         coverImage,
-        
       });
 
-      if (resData && (resData.acknowledged || resData._id)) {
+      if (resData && resData.success) {
         setSuccess(true);
-        setTimeout(() => router.push("/dashboard/writer/my-ebooks"), 2200);
+        setTimeout(() => router.push("/dashboard/writer/my-ebooks"), 1800);
       } else {
-        throw new Error(resData?.message || "Failed to add ebook");
+        throw new Error(resData?.message || "Failed to update ebook");
       }
     } catch (err) {
       setServerError(err.message);
@@ -241,6 +269,64 @@ export default function AddEbookFormPage() {
   }
 
   const isLoading = uploading || submitting;
+  const coverToShow = imagePreview || existingCover;
+
+  // ── Loading state ─────────────────────────────────────
+  if (loadingEbook) {
+    return (
+      <div className="min-h-screen bg-[#07070E] flex items-center justify-center">
+        <Loader2 size={22} className="animate-spin" style={{ color: ACCENT }} />
+      </div>
+    );
+  }
+
+  // ── Not found / forbidden states ──────────────────────
+  if (notFound || forbidden) {
+    return (
+      <div className="min-h-screen bg-[#07070E] flex items-center justify-center px-6">
+        <div className="text-center max-w-sm">
+          <AlertCircle
+            size={32}
+            style={{ color: "#EF4444", margin: "0 auto 16px" }}
+            strokeWidth={1.5}
+          />
+          <h2
+            style={{
+              fontFamily: "'Playfair Display',serif",
+              fontSize: "1.4rem",
+              color: "#EDE9E0",
+              marginBottom: 8,
+            }}
+          >
+            {forbidden ? "Not authorized" : "Ebook not found"}
+          </h2>
+          <p
+            style={{
+              color: "#475569",
+              fontFamily: "'Inter',sans-serif",
+              fontSize: "13.5px",
+              marginBottom: 20,
+            }}
+          >
+            {forbidden
+              ? "You don't have permission to edit this ebook."
+              : "This ebook doesn't exist or may have been removed."}
+          </p>
+          <button
+            onClick={() => router.push("/dashboard/writer/my-ebooks")}
+            className="px-4 py-2.5 rounded-xl text-[13px] font-semibold"
+            style={{
+              background: ACCENT,
+              color: "#07070E",
+              fontFamily: "'Inter',sans-serif",
+            }}
+          >
+            Back to My Ebooks
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   // ── Success screen ────────────────────────────────────
   if (success) {
@@ -263,7 +349,7 @@ export default function AddEbookFormPage() {
           >
             <CheckCircle2
               size={40}
-              style={{ color: SUCCESS }}
+              style={{ color: ACCENT }}
               strokeWidth={1.5}
             />
           </motion.div>
@@ -275,19 +361,8 @@ export default function AddEbookFormPage() {
               fontWeight: 700,
             }}
           >
-            Submitted for review
+            Changes saved
           </h2>
-          <p
-            style={{
-              color: "#475569",
-              fontFamily: "'Inter',sans-serif",
-              fontSize: "14px",
-              maxWidth: "320px",
-            }}
-          >
-            Your ebook now sits in My Ebooks as a draft. Once an admin approves
-            it, it'll appear in Browse Ebooks automatically.
-          </p>
           <p
             style={{
               color: "#1E293B",
@@ -295,7 +370,7 @@ export default function AddEbookFormPage() {
               fontSize: "12px",
             }}
           >
-            Redirecting to your dashboard…
+            Redirecting to My Ebooks…
           </p>
         </motion.div>
       </div>
@@ -313,7 +388,6 @@ export default function AddEbookFormPage() {
     >
       <style>{inputFocusStyle}</style>
 
-      {/* Accent glow */}
       <div
         className="fixed inset-0 pointer-events-none"
         style={{
@@ -323,7 +397,14 @@ export default function AddEbookFormPage() {
       />
 
       <div className="relative z-10 max-w-3xl mx-auto px-4 sm:px-6 py-12">
-        {/* Header */}
+        <button
+          onClick={() => router.push("/dashboard/writer/my-ebooks")}
+          className="flex items-center gap-2 text-[12.5px] mb-6"
+          style={{ color: "#475569", fontFamily: "'Inter',sans-serif" }}
+        >
+          <ArrowLeft size={14} /> Back to My Ebooks
+        </button>
+
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
@@ -338,11 +419,11 @@ export default function AddEbookFormPage() {
                 border: `0.5px solid rgba(${ACCENT_RGB},0.25)`,
               }}
             >
-              <BookPlus size={18} style={{ color: SUCCESS }} strokeWidth={1.8} />
+              <Pencil size={18} style={{ color: ACCENT }} strokeWidth={1.8} />
             </div>
             <span
               className="text-[11px] font-bold tracking-[0.18em] uppercase"
-              style={{ color: SUCCESS, fontFamily: "'Inter',sans-serif" }}
+              style={{ color: ACCENT, fontFamily: "'Inter',sans-serif" }}
             >
               Writer Dashboard
             </span>
@@ -357,8 +438,8 @@ export default function AddEbookFormPage() {
               lineHeight: 1.1,
             }}
           >
-            Add a new{" "}
-            <em style={{ fontStyle: "italic", fontWeight: 400, color: SUCCESS }}>
+            Edit{" "}
+            <em style={{ fontStyle: "italic", fontWeight: 400, color: ACCENT }}>
               ebook
             </em>
           </h1>
@@ -370,43 +451,11 @@ export default function AddEbookFormPage() {
               marginTop: "6px",
             }}
           >
-            Fill in the details below. Every new title starts as a draft
-            awaiting review.
+            Changes are saved instantly — no re-review needed unless you're an
+            unpublished title awaiting approval.
           </p>
         </motion.div>
 
-      
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.04, duration: 0.5 }}
-          className="flex items-start gap-3 rounded-xl px-4 py-3.5 mb-6"
-          style={{
-            background: `rgba(${ACCENT_RGB},0.06)`,
-            border: `0.5px solid rgba(${ACCENT_RGB},0.2)`,
-          }}
-        >
-          <Info
-            size={16}
-            strokeWidth={1.8}
-            style={{ color: ACCENT, flexShrink: 0, marginTop: "1px" }}
-          />
-          <p
-            style={{
-              color: "#94A3B8",
-              fontFamily: "'Inter',sans-serif",
-              fontSize: "12.5px",
-              lineHeight: 1.5,
-            }}
-          >
-            Ebooks aren't publish-ready the moment you save them. This one will
-            sit in <span style={{ color: "#CBD5E1" }}>My Ebooks</span> as a
-            draft until an admin reviews and approves it — only then does it
-            appear in Browse Ebooks for readers.
-          </p>
-        </motion.div>
-
-        {/* Form card */}
         <motion.form
           onSubmit={handleSubmit}
           initial={{ opacity: 0, y: 20 }}
@@ -420,8 +469,11 @@ export default function AddEbookFormPage() {
           }}
           noValidate
         >
-          {/* ── Cover image upload ── */}
-          <Field label="Cover Image" required error={errors.image}>
+          <Field
+            label="Cover Image"
+            error={errors.image}
+            hint="Leave unchanged to keep the current cover"
+          >
             <div
               onDragOver={(e) => {
                 e.preventDefault();
@@ -429,24 +481,23 @@ export default function AddEbookFormPage() {
               }}
               onDragLeave={() => setIsDragging(false)}
               onDrop={handleDrop}
-              onClick={() => !imagePreview && fileRef.current?.click()}
+              onClick={() => fileRef.current?.click()}
               className="relative rounded-xl overflow-hidden transition-all duration-200 cursor-pointer"
               style={{
                 border: `1px dashed ${isDragging ? ACCENT : errors.image ? "#EF4444" : "rgba(255,255,255,0.12)"}`,
                 background: isDragging
                   ? `rgba(${ACCENT_RGB},0.05)`
                   : "rgba(255,255,255,0.02)",
-                minHeight: imagePreview ? "auto" : "160px",
+                minHeight: coverToShow ? "auto" : "160px",
               }}
             >
-              {imagePreview ? (
+              {coverToShow ? (
                 <div className="relative">
                   <img
-                    src={imagePreview}
+                    src={coverToShow}
                     alt="Preview"
                     className="w-full max-h-[320px] object-cover"
                   />
-                  {/* Overlay controls */}
                   <div
                     className="absolute inset-0 flex items-center justify-center gap-3 opacity-0 hover:opacity-100 transition-opacity duration-200"
                     style={{ background: "rgba(7,7,14,0.7)" }}
@@ -466,65 +517,29 @@ export default function AddEbookFormPage() {
                     >
                       <Upload size={13} strokeWidth={2.5} /> Change
                     </button>
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setImageFile(null);
-                        setImagePreview(null);
-                      }}
-                      className="flex items-center gap-2 px-4 py-2 rounded-xl text-[12px] font-medium"
-                      style={{
-                        background: "rgba(239,68,68,0.15)",
-                        color: "#EF4444",
-                        border: "0.5px solid rgba(239,68,68,0.3)",
-                        fontFamily: "'Inter',sans-serif",
-                      }}
-                    >
-                      <X size={13} strokeWidth={2.5} /> Remove
-                    </button>
                   </div>
                 </div>
               ) : (
                 <div className="flex flex-col items-center justify-center gap-3 py-10 px-4">
-                  <div
-                    className="w-12 h-12 rounded-xl flex items-center justify-center"
+                  <ImageIcon
+                    size={22}
+                    style={{ color: ACCENT }}
+                    strokeWidth={1.5}
+                  />
+                  <p
+                    className="text-[13px] font-medium"
                     style={{
-                      background: `rgba(${ACCENT_RGB},0.1)`,
-                      border: `0.5px solid rgba(${ACCENT_RGB},0.2)`,
+                      color: "#94A3B8",
+                      fontFamily: "'Inter',sans-serif",
                     }}
                   >
-                    <ImageIcon
-                      size={22}
-                      style={{ color: ACCENT }}
-                      strokeWidth={1.5}
-                    />
-                  </div>
-                  <div className="text-center">
-                    <p
-                      className="text-[13px] font-medium"
-                      style={{
-                        color: "#94A3B8",
-                        fontFamily: "'Inter',sans-serif",
-                      }}
+                    Drag & drop or{" "}
+                    <span
+                      style={{ color: ACCENT, textDecoration: "underline" }}
                     >
-                      Drag & drop or{" "}
-                      <span
-                        style={{ color: ACCENT, textDecoration: "underline" }}
-                      >
-                        browse
-                      </span>
-                    </p>
-                    <p
-                      className="text-[11px] mt-1"
-                      style={{
-                        color: "#1E293B",
-                        fontFamily: "'Inter',sans-serif",
-                      }}
-                    >
-                      PNG, JPG, WEBP · Max 5 MB
-                    </p>
-                  </div>
+                      browse
+                    </span>
+                  </p>
                 </div>
               )}
               <input
@@ -537,7 +552,6 @@ export default function AddEbookFormPage() {
             </div>
           </Field>
 
-          {/* ── Title ── */}
           <Field
             label="Title"
             required
@@ -554,7 +568,6 @@ export default function AddEbookFormPage() {
               <input
                 className="fable-input"
                 style={{ ...inputBase, paddingLeft: "36px" }}
-                placeholder="e.g. The Silent Archive"
                 value={form.title}
                 maxLength={120}
                 onChange={(e) =>
@@ -564,12 +577,11 @@ export default function AddEbookFormPage() {
             </div>
           </Field>
 
-          {/* ── Description ── */}
           <Field
             label="Description"
             required
             error={errors.description}
-            hint="Write a compelling synopsis. Minimum 30 characters."
+            hint="Minimum 30 characters."
           >
             <div className="relative">
               <FileText
@@ -581,7 +593,6 @@ export default function AddEbookFormPage() {
               <textarea
                 className="fable-input fable-textarea"
                 style={{ ...inputBase, paddingLeft: "36px" }}
-                placeholder="Give readers a taste of your story…"
                 value={form.description}
                 rows={5}
                 onChange={(e) =>
@@ -591,9 +602,7 @@ export default function AddEbookFormPage() {
             </div>
           </Field>
 
-          {/* ── Genre + Price row ── */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-            {/* Genre */}
             <Field label="Genre" required error={errors.genre}>
               <div className="relative">
                 <Tag
@@ -631,7 +640,6 @@ export default function AddEbookFormPage() {
               </div>
             </Field>
 
-            {/* Price */}
             <Field
               label="Price (USD)"
               required
@@ -651,7 +659,6 @@ export default function AddEbookFormPage() {
                   type="number"
                   min="0"
                   step="0.01"
-                  placeholder="4.99"
                   value={form.price}
                   onChange={(e) =>
                     setForm((p) => ({ ...p, price: e.target.value }))
@@ -661,7 +668,6 @@ export default function AddEbookFormPage() {
             </Field>
           </div>
 
-          {/* ── Server error ── */}
           <AnimatePresence>
             {serverError && (
               <motion.div
@@ -687,7 +693,6 @@ export default function AddEbookFormPage() {
             )}
           </AnimatePresence>
 
-          {/* ── Submit ── */}
           <button
             type="submit"
             disabled={isLoading}
@@ -701,25 +706,15 @@ export default function AddEbookFormPage() {
           >
             {isLoading ? (
               <>
-                <Loader2 size={16} className="animate-spin" strokeWidth={2.5} />
-                {uploading ? "Uploading image…" : "Submitting for review…"}
+                <Loader2 size={16} className="animate-spin" strokeWidth={2.5} />{" "}
+                {uploading ? "Uploading image…" : "Saving…"}
               </>
             ) : (
               <>
-                <Clock size={16} strokeWidth={2.5} />
-                Submit for review
+                <CheckCircle2 size={16} strokeWidth={2.5} /> Save changes
               </>
             )}
           </button>
-
-          {/* Bottom note */}
-          <p
-            className="text-center text-[11px]"
-            style={{ color: "#1E293B", fontFamily: "'Inter',sans-serif" }}
-          >
-            Cover image is uploaded to imgBB · You can edit this ebook anytime
-            from My Ebooks
-          </p>
         </motion.form>
       </div>
     </div>

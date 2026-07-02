@@ -21,6 +21,7 @@ import {
   X,
   TrendingUp,
   LayoutDashboard,
+  LayoutDashboardIcon,
 } from "lucide-react";
 
 const FD = "'Playfair Display',Georgia,serif";
@@ -61,13 +62,18 @@ const NAV = {
     { href: "/dashboard/writer/profile", label: "Profile", Icon: Settings },
   ],
   Admin: [
-    { href: "/dashboard/admin", label: "Analytics", Icon: BarChart3 },
+    { href: "/dashboard/admin", label: "Dashboard", Icon: LayoutDashboardIcon },
     { href: "/dashboard/admin/users", label: "Manage Users", Icon: Users },
     { href: "/dashboard/admin/ebooks", label: "All Ebooks", Icon: BookOpen },
     {
       href: "/dashboard/admin/transactions",
       label: "Transactions",
       Icon: CreditCard,
+    },
+    {
+      href: "/dashboard/admin/analytics",
+      label: "Analytics",
+      Icon: TrendingUp,
     },
   ],
 };
