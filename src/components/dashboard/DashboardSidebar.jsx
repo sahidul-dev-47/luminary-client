@@ -492,9 +492,15 @@ export default function DashboardSidebar() {
   const pathname = usePathname();
   const { data: session } = authClient.useSession();
 
-  const role = session?.user?.role ?? "Reader";
+  useEffect(() => {
+    authClient.getSession({ query: { disableCookieCache: true } });
+  }, []);
+
+  const role = session?.user?.appRole ?? "Reader";
   const rm = ROLE_META[role] ?? ROLE_META.Reader;
   const links = NAV[role] ?? NAV.Reader;
+
+  
 
   const [mobileOpen, setMobileOpen] = useState(false);
   const closeMobile = () => setMobileOpen(false);

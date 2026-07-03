@@ -207,121 +207,140 @@ function Field({
 // ── Main Register Page ──────────────────────────────────────────────
 export default function RegisterPage() {
   const router = useRouter();
-  const { data: session } = authClient.useSession();
+const { data: session, isPending: sessionLoading } = authClient.useSession();
 
-  const [form, setForm] = useState({
-    fullName: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
-    role: "Reader",
-  });
-  const [errors, setErrors] = useState({});
-  const [apiError, setApiError] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
-  const [showRoleModal, setShowRoleModal] = useState(false);
+const [form, setForm] = useState({
+  fullName: "",
+  email: "",
+  password: "",
+  confirmPassword: "",
+});
+const [errors, setErrors] = useState({});
+const [apiError, setApiError] = useState("");
+const [isLoading, setIsLoading] = useState(false);
+const [success, setSuccess] = useState(false);
+const [showRoleModal, setShowRoleModal] = useState(false);
+const [checkingRole, setCheckingRole] = useState(false);
 
-  const [showPw, setShowPw] = useState(false);
-  const [showCpw, setShowCpw] = useState(false);
+const [showPw, setShowPw] = useState(false);
+const [showCpw, setShowCpw] = useState(false);
 
-  useEffect(() => {
-    const checkRole = async () => {
-      if (!session?.user) return;
 
-      const res = await fetch("/api/auth/check-role");
-      const data = await res.json();
+const checkRole = async () => {
+  setCheckingRole(true);
+  try {
+    const res = await fetch("/api/auth/check-role");
+    const data = await res.json();
 
-      // Modal only for Google users
-      if (!data.role) {
-        setShowRoleModal(true);
-      }
-    };
-
-    checkRole();
-  }, [session]);
-
-  const setField = (k) => (e) => {
-    setForm((p) => ({ ...p, [k]: e.target.value }));
-    setErrors((p) => ({ ...p, [k]: "" }));
-    setApiError("");
-  };
-
-  const validate = () => {
-    const e = {};
-    if (!form.fullName.trim()) e.fullName = "Full name is required";
-    if (!form.email.trim() || !/\S+@\S+\.\S+/.test(form.email))
-      e.email = "Enter a valid email address";
-    if (!form.password || form.password.length < 6)
-      e.password = "Password must be at least 6 characters";
-    if (form.password !== form.confirmPassword)
-      e.confirmPassword = "Passwords do not match";
-    setErrors(e);
-    return Object.keys(e).length === 0;
-  };
-
-  const handleEmailSubmit = async (e) => {
-    e.preventDefault();
-    setApiError("");
-
-    if (!validate()) return;
-
-    setIsLoading(true);
-
-    try {
-      const { error } = await signUp.email({
-        name: form.fullName.trim(),
-        email: form.email.trim(),
-        password: form.password,
-      });
-
-      if (error) {
-        setApiError(error.message || "Signup failed");
-        return;
-      }
-
+    if (data.authenticated && !data.role) {
       setShowRoleModal(true);
-    } catch (err) {
-      setApiError("Something went wrong");
-    } finally {
-      setIsLoading(false);
+    } else if (data.authenticated && data.role) {
+  
+      router.push("/dashboard");
     }
-  };
+  } catch (err) {
+    console.error("Role check failed:", err);
+    setApiError("Could not verify account. Please refresh.");
+  } finally {
+    setCheckingRole(false);
+  }
+};
 
-  const handleGoogle = async () => {
-    setApiError("");
-    try {
-      await signIn.social({
-        provider: "google",
-        callbackURL: "/auth/register",
-      });
-    } catch (err) {
-      setApiError("Google sign up failed. Please try again.");
+
+useEffect(() => {
+  if (sessionLoading) return;
+  if (!session?.user) return;
+
+  checkRole();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, [session, sessionLoading]);
+
+const setField = (k) => (e) => {
+  setForm((p) => ({ ...p, [k]: e.target.value }));
+  setErrors((p) => ({ ...p, [k]: "" }));
+  setApiError("");
+};
+
+const validate = () => {
+  const e = {};
+  if (!form.fullName.trim()) e.fullName = "Full name is required";
+  if (!form.email.trim() || !/\S+@\S+\.\S+/.test(form.email))
+    e.email = "Enter a valid email address";
+  if (!form.password || form.password.length < 6)
+    e.password = "Password must be at least 6 characters";
+  if (form.password !== form.confirmPassword)
+    e.confirmPassword = "Passwords do not match";
+  setErrors(e);
+  return Object.keys(e).length === 0;
+};
+
+const handleEmailSubmit = async (e) => {
+  e.preventDefault();
+  setApiError("");
+
+  if (!validate()) return;
+
+  setIsLoading(true);
+
+  try {
+    const { error } = await signUp.email({
+      name: form.fullName.trim(),
+      email: form.email.trim(),
+      password: form.password,
+    });
+
+    if (error) {
+      setApiError(error.message || "Signup failed");
+      return;
     }
-  };
 
-  const handleRoleSelect = async (selectedRole) => {
-    setIsLoading(true);
-    try {
-      const res = await fetch("/api/auth/update-role", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ role: selectedRole }),
-      });
+    
+    await checkRole();
+  } catch (err) {
+    setApiError("Something went wrong");
+  } finally {
+    setIsLoading(false);
+  }
+};
 
-      if (res.ok) {
-        setShowRoleModal(false);
-        setSuccess(true);
-        setTimeout(() => router.push("/dashboard"), 1200);
-      } else {
-        setApiError("Failed to save role");
-      }
-    } catch (err) {
-      setApiError("Network error");
-    } finally {
-      setIsLoading(false);
+const handleGoogle = async () => {
+  setApiError("");
+  try {
+    await signIn.social({
+      provider: "google",
+      callbackURL: "/auth/register",
+    });
+    
+  } catch (err) {
+    setApiError("Google sign up failed. Please try again.");
+  }
+};
+
+const handleRoleSelect = async (selectedRole) => {
+  setIsLoading(true);
+  try {
+    const res = await fetch("/api/auth/update-role", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ role: selectedRole }),
+    });
+
+    if (res.ok) {
+      
+      await authClient.getSession({ query: { disableCookieCache: true } });
+
+      setShowRoleModal(false);
+      setSuccess(true);
+      setTimeout(() => router.push("/dashboard"), 1200);
+    } else {
+      setApiError("Failed to save role");
     }
-  };
+  } catch (err) {
+    setApiError("Network error");
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   const eyeBtn = (show, toggle) => (
     <button

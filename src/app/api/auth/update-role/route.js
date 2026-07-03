@@ -23,17 +23,10 @@ export async function PATCH(req) {
 
     const db = client.db("luminary_db");
 
-    const result = await db.collection("user").updateOne(
-      {
-        email: session.user.email,
-      },
-      {
-        $set: {
-          role: role,
-          updatedAt: new Date(),
-        },
-      }
-    );
+   const result = await db.collection("user").updateOne(
+  { email: session.user.email },
+  { $set: { appRole: role, updatedAt: new Date() } } 
+);
 
     return Response.json({
       success: true,

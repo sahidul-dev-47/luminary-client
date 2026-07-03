@@ -1,7 +1,5 @@
 "use client";
 
-// app/unauthorized/page.jsx  — 401 Unauthorized Page
-// Place at: src/app/unauthorized/page.jsx
 
 import { useEffect, useRef } from "react";
 import Link from "next/link";

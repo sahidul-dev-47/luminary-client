@@ -19,7 +19,6 @@ export const getUserToken = async () => {
     return session?.session?.token || null;
 }
 
-
 export const requireRole = async (requiredRole) => {
     const user = await getUserSession();
 
@@ -27,8 +26,7 @@ export const requireRole = async (requiredRole) => {
         redirect('/auth/login');
     }
 
-    
-    const userRole = user.role?.trim();
+    const userRole = user.appRole?.trim();
     const neededRole = requiredRole.charAt(0).toUpperCase() + requiredRole.slice(1).toLowerCase();
 
     if (userRole !== neededRole) {

@@ -3,22 +3,28 @@ import EbookGrid from "@/components/ebooks/EbookGrid";
 import SearchBar from "@/components/ebooks/searchBar";
 import React from "react";
 
-
-const F  = "'Inter',system-ui,sans-serif";
-const FD = "'Playfair Display',Georgia,serif";
+const F = "'Inter', system-ui, sans-serif";
+const FD = "'Playfair Display', Georgia, serif";
 
 async function getEbooks(sp) {
   try {
     const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000";
     const params = new URLSearchParams();
+
     if (sp?.search) params.set("search", sp.search);
     if (sp?.genre) params.set("genre", sp.genre);
     if (sp?.minPrice) params.set("minPrice", sp.minPrice);
     if (sp?.maxPrice) params.set("maxPrice", sp.maxPrice);
     if (sp?.sort) params.set("sort", sp.sort);
-    if (sp?.page) params.set("page", sp.page);
 
-    const res = await fetch(`${baseUrl}/api/ebooks?${params.toString()}`, { cache: "no-store" });
+    // Pagination - 10 per page
+    params.set("page", sp?.page || "1");
+    params.set("limit", "10");   
+
+    const res = await fetch(`${baseUrl}/api/ebooks?${params.toString()}`, { 
+      cache: "no-store" 
+    });
+
     if (!res.ok) throw new Error("Failed to fetch data");
     return res.json();
   } catch (error) {
@@ -28,9 +34,38 @@ async function getEbooks(sp) {
 }
 
 export default async function EbooksPage({ searchParams }) {
-  const sp = await searchParams; // Next.js 15: searchParams is a Promise
+  const sp = await searchParams;
   const data = await getEbooks(sp);
+  
   const ebooks = data.ebooks || [];
+  const currentPage = parseInt(data.page) || 1;
+  const totalPages = data.totalPages || 1;
+
+  // Smart pagination
+  const getPageNumbers = () => {
+    const pages = [];
+    const maxVisible = 5;
+
+    if (totalPages <= maxVisible) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      pages.push(1);
+      if (currentPage > 3) pages.push("...");
+      
+      const start = Math.max(2, currentPage - 1);
+      const end = Math.min(totalPages - 1, currentPage + 1);
+      
+      for (let i = start; i <= end; i++) {
+        if (!pages.includes(i)) pages.push(i);
+      }
+
+      if (currentPage < totalPages - 2) pages.push("...");
+      if (!pages.includes(totalPages)) pages.push(totalPages);
+    }
+    return pages;
+  };
+
+  const pageNumbers = getPageNumbers();
 
   return (
     <main className="min-h-screen" style={{ background: "#07070E" }}>
@@ -87,23 +122,46 @@ export default async function EbooksPage({ searchParams }) {
         <EbookGrid ebooks={ebooks} />
 
         {/* ── Pagination ── */}
-        {data.totalPages > 1 && (
+        {totalPages > 1 && (
           <div className="max-w-[1180px] mx-auto px-5 sm:px-8 lg:px-10 pb-20 flex justify-center gap-2 flex-wrap">
-            {Array.from({ length: data.totalPages }, (_, i) => i + 1).map((p) => (
+            {/* Previous Button */}
+            <a
+              href={`?${new URLSearchParams({ ...sp, page: Math.max(1, currentPage - 1) }).toString()}`}
+              className={`px-4 py-2 rounded-full text-sm flex items-center gap-1 transition-all ${
+                currentPage === 1 ? 'opacity-50 pointer-events-none' : 'hover:bg-white/10'
+              }`}
+              style={{ fontFamily: F, color: "#94A3B8", border: "0.5px solid rgba(255,255,255,0.1)" }}
+            >
+              ← Prev
+            </a>
+
+            {/* Page Numbers */}
+            {pageNumbers.map((p, i) => (
               <a
-                key={p}
+                key={i}
                 href={`?${new URLSearchParams({ ...sp, page: p }).toString()}`}
                 className="w-9 h-9 flex items-center justify-center rounded-full text-sm"
                 style={{
                   fontFamily: F,
-                  background: p === data.page ? "#F4C430" : "rgba(255,255,255,0.05)",
-                  color: p === data.page ? "#07070E" : "#94A3B8",
+                  background: p === currentPage ? "#F4C430" : "rgba(255,255,255,0.05)",
+                  color: p === currentPage ? "#07070E" : "#94A3B8",
                   border: "0.5px solid rgba(255,255,255,0.1)",
                 }}
               >
                 {p}
               </a>
             ))}
+
+            {/* Next Button */}
+            <a
+              href={`?${new URLSearchParams({ ...sp, page: Math.min(totalPages, currentPage + 1) }).toString()}`}
+              className={`px-4 py-2 rounded-full text-sm flex items-center gap-1 transition-all ${
+                currentPage === totalPages ? 'opacity-50 pointer-events-none' : 'hover:bg-white/10'
+              }`}
+              style={{ fontFamily: F, color: "#94A3B8", border: "0.5px solid rgba(255,255,255,0.1)" }}
+            >
+              Next →
+            </a>
           </div>
         )}
       </div>

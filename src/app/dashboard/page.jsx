@@ -1,26 +1,24 @@
-
-
 import { getUserSession } from '@/lib/core/session';
 import { redirect } from 'next/navigation';
+
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export default async function DashboardPage() {
     const user = await getUserSession();
 
-    if (!user?.role) {
+    
+    if (!user?.appRole) {
         redirect('/auth/login');
     }
 
-    
-    switch (user.role) {
+    switch (user.appRole) {
         case "Writer":
             redirect('/dashboard/writer');
-            break;
         case "Reader":
             redirect('/dashboard/reader');
-            break;
         case "Admin":
             redirect('/dashboard/admin');
-            break;
         default:
             redirect('/unauthorized');
     }

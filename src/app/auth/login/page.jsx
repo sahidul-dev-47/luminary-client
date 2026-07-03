@@ -148,115 +148,133 @@ function Field({ label, id, type, value, onChange, placeholder, error, icon: Ico
 // ── Main Login Page ──────────────────────────────────────────────
 export default function LoginPage() {
   const router = useRouter();
-  const { data: session } = authClient.useSession();
+const { data: session, isPending: sessionLoading } = authClient.useSession();
 
-  const [form, setForm] = useState({ email: "", password: "" });
-  const [errors, setErrors] = useState({});
-  const [apiError, setApiError] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
-  const [showRoleModal, setShowRoleModal] = useState(false);
+const [form, setForm] = useState({ email: "", password: "" });
+const [errors, setErrors] = useState({});
+const [apiError, setApiError] = useState("");
+const [isLoading, setIsLoading] = useState(false);
+const [success, setSuccess] = useState(false);
+const [showRoleModal, setShowRoleModal] = useState(false);
+const [checkingRole, setCheckingRole] = useState(false);
 
-  const [showPw, setShowPw] = useState(false);
+const [showPw, setShowPw] = useState(false);
 
-  const set = (k) => (e) => {
-    setForm(p => ({ ...p, [k]: e.target.value }));
-    setErrors(p => ({ ...p, [k]: "" }));
-    setApiError("");
-  };
+const set = (k) => (e) => {
+  setForm((p) => ({ ...p, [k]: e.target.value }));
+  setErrors((p) => ({ ...p, [k]: "" }));
+  setApiError("");
+};
 
-  const validate = () => {
-    const e = {};
-    if (!form.email.trim() || !/\S+@\S+\.\S+/.test(form.email)) e.email = "Enter a valid email address";
-    if (!form.password) e.password = "Password is required";
-    setErrors(e);
-    return Object.keys(e).length === 0;
-  };
+const validate = () => {
+  const e = {};
+  if (!form.email.trim() || !/\S+@\S+\.\S+/.test(form.email))
+    e.email = "Enter a valid email address";
+  if (!form.password) e.password = "Password is required";
+  setErrors(e);
+  return Object.keys(e).length === 0;
+};
+
+const checkRole = async () => {
+  setCheckingRole(true);
+  try {
+    const res = await fetch("/api/auth/check-role");
+    const data = await res.json();
+
+    if (!data.authenticated) return;
+
+    if (!data.role) {
+      setShowRoleModal(true);
+    } else {
+      setSuccess(true);
+      setTimeout(() => router.push("/dashboard"), 800);
+    }
+  } catch (error) {
+    console.error("Role check failed:", error);
+    setApiError("Could not verify account. Please try again.");
+  } finally {
+    setCheckingRole(false);
+  }
+};
+
+useEffect(() => {
+  if (sessionLoading) return;
+  if (!session?.user) return;
+
+  authClient.getSession({ query: { disableCookieCache: true } }).then(() => {
+    checkRole();
+  });
+}, [session, sessionLoading]);
+
+const handleSubmit = async (ev) => {
+  ev.preventDefault();
+  setApiError("");
+
+  if (!validate()) return;
+
+  setIsLoading(true);
+
+  try {
+    const { error } = await signIn.email({
+      email: form.email.trim(),
+      password: form.password,
+    });
+
+    if (error) {
+      setApiError(error.message || "Invalid email or password");
+      return;
+    }
 
   
- useEffect(() => {
-  const checkRole = async () => {
-    if (!session?.user) return;
+    await authClient.getSession({ query: { disableCookieCache: true } });
+    await checkRole();
 
-    try {
-      const res = await fetch("/api/auth/check-role");
-      const data = await res.json();
-
-      
-      if (!data.role) {
-        setShowRoleModal(true);
-      } else {
-        router.push("/dashboard");
-      }
-    } catch (error) {
-      console.error("Role check failed:", error);
-      setShowRoleModal(true);
-    }
-  };
-
-  if (session?.user) {
-    checkRole();
+  } catch (err) {
+    console.error(err);
+    setApiError("Something went wrong. Please try again.");
+  } finally {
+    setIsLoading(false);
   }
-}, [session, router]);
+};
 
-  const handleSubmit = async (ev) => {
-    ev.preventDefault();
-    setApiError("");
-
-    if (!validate()) return;
-
-    setIsLoading(true);
-
-    try {
-      const { error } = await signIn.email({
-        email: form.email.trim(),
-        password: form.password,
-      });
-
-      if (error) {
-        setApiError(error.message || "Invalid email or password");
-        return;
-      }
-
-      setSuccess(true);
-      setTimeout(() => router.push("/dashboard"), 1400);
-    } catch (err) {
-      console.error(err);
-      setApiError("Something went wrong. Please try again.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleGoogle = async () => {
+const handleGoogle = async () => {
+  setApiError("");
+  try {
     await signIn.social({
       provider: "google",
       callbackURL: "/auth/login",
     });
-  };
+  
+  } catch (err) {
+    setApiError("Google sign in failed. Please try again.");
+  }
+};
 
-  const handleRoleSelect = async (selectedRole) => {
-    setIsLoading(true);
-    try {
-      const res = await fetch("/api/auth/update-role", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ role: selectedRole }),
-      });
+const handleRoleSelect = async (selectedRole) => {
+  setIsLoading(true);
+  try {
+    const res = await fetch("/api/auth/update-role", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ role: selectedRole }),
+    });
 
-      if (res.ok) {
-        setShowRoleModal(false);
-        setSuccess(true);
-        setTimeout(() => router.push("/dashboard"), 1500);
-      } else {
-        setApiError("Failed to save role");
-      }
-    } catch (err) {
-      setApiError("Network error occurred");
-    } finally {
-      setIsLoading(false);
+    if (res.ok) {
+  
+      await authClient.getSession({ query: { disableCookieCache: true } });
+
+      setShowRoleModal(false);
+      setSuccess(true);
+      setTimeout(() => router.push("/dashboard"), 1500);
+    } else {
+      setApiError("Failed to save role");
     }
-  };
+  } catch (err) {
+    setApiError("Network error occurred");
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   return (
     <div className="min-h-screen flex items-center justify-center p-5"

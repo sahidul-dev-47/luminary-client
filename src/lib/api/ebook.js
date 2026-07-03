@@ -1,15 +1,10 @@
-import { protectedFetch, serverFetch } from "../core/server";
-import { getUserSession } from "../core/session";
+// import { protectedFetch, serverFetch } from "../core/server";
+// import { getUserSession } from "../core/session";
 
-export const getWriter = async () => {
-    return protectedFetch(`/api/ebooks`);
-}
+// export const getWriter = async () => {
+//     return protectedFetch(`/api/ebooks`);
+// }
 
-export const getEbookWriter = async (writerId) => {
-    return serverFetch(`/api/my/ebooks?writerId=${writerId}`);
-}
-
-// export const getLoggedInRecruiterCompany = async () => {
-//     const user = await getUserSession();
-//     return getRecruiterCompany(user?.id);
+// export const getEbookWriter = async (writerId) => {
+//     return serverFetch(`/api/my/ebooks?writerId=${writerId}`);
 // }

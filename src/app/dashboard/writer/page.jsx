@@ -60,23 +60,18 @@ export default function WriterDashboard() {
     }
   }, [API_URL]);
 
-  useEffect(() => {
-    if (isSessionLoading) return;
+ useEffect(() => {
+  if (isSessionLoading) return;
 
-    if (!session?.user) {
-      router.push("/auth/login");
-      return;
-    }
+  if (!session?.user) {
+    router.push("/auth/login");
+    return;
+  }
 
-    if (session.user.role?.toLowerCase() !== "writer") {
-      router.push("/dashboard/reader");
-      return;
-    }
-
-    if (session.user.id && session.user.email) {
-      fetchWriterData(session.user.id, session.user.email);
-    }
-  }, [session, isSessionLoading, router, fetchWriterData]);
+  if (session.user.id && session.user.email) {
+    fetchWriterData(session.user.id, session.user.email);
+  }
+}, [session, isSessionLoading, router, fetchWriterData]);
 
   // ── Monthly revenue trend, last 6 months ──
   const monthlyTrend = useMemo(() => {

@@ -25,10 +25,8 @@ export async function GET(request) {
 
     return Response.json({
       authenticated: true,
-      role: user?.role || null,
-      provider: user?.provider || session.user.provider, 
+      role: user?.appRole || null,
     });
-
   } catch (error) {
     console.error("Check Role Error:", error);
     return Response.json({ authenticated: true, role: null }, { status: 200 });

@@ -92,9 +92,6 @@ export default function FeaturedEbooks() {
       try {
         setLoading(true);
         setError(false);
-        // Reuses the existing /api/ebooks list endpoint (default sort = newest first,
-        // status: Published). No dedicated "featured" route needed — the moment a
-        // writer publishes a new ebook it's #1 here automatically.
         const res = await fetch(`${API_BASE}/api/ebooks?limit=6&page=1`);
         if (!res.ok) throw new Error("Request failed");
         const data = await res.json();
