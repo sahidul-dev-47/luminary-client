@@ -4,8 +4,9 @@ import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { authClient } from "@/lib/auth-client";
 import { Loader2, Receipt, TrendingUp, Calendar } from "lucide-react";
+import { authFetch } from "@/lib/clientFetch";
 
-const API_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
+
 
 const FD = "'Playfair Display',Georgia,serif";
 const F  = "'Inter',system-ui,sans-serif";
@@ -31,8 +32,8 @@ export default function SalesHistoryPage() {
     const fetchSales = async () => {
       setLoading(true);
       try {
-        const res = await fetch(
-          `${API_URL}/api/v1/writer/sales?writerId=${user.id}&writerEmail=${user.email}`,
+        const res = await authFetch(
+          `/api/v1/writer/sales?writerId=${user.id}&writerEmail=${user.email}`,
         );
         const data = await res.json();
         if (data.success) setSales(data.sales || []);

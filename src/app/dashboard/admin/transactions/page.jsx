@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
 import DashboardSidebar from "@/components/dashboard/DashboardSidebar";
+import { authFetch } from "@/lib/clientFetch";
 
 const display = Fraunces({
   subsets: ["latin"],
@@ -27,8 +28,7 @@ const display = Fraunces({
 });
 const body = Inter({ subsets: ["latin"], variable: "--font-body" });
 
-// Same tokens used across Ledger / Membership Roll / The Stacks —
-// one visual language across the admin panel.
+
 const PALETTE = {
   gold: "#D4A657",
   rose: "#E2836F",
@@ -37,7 +37,7 @@ const PALETTE = {
   card: "#161922",
 };
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000";
+
 
 const fmtMoney = (n) => `$${Number(n || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 const fmtDate = (d) => new Date(d).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
@@ -53,7 +53,7 @@ export default function Transactions() {
   const fetchTransactions = async () => {
     try {
       setLoading(true);
-      const res = await fetch(`${BACKEND_URL}/api/v1/admin/transactions`);
+      const res = await authFetch(`/api/v1/admin/transactions`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
       const data = await res.json();
@@ -101,11 +101,7 @@ export default function Transactions() {
       <Toaster position="top-center" reverseOrder={false} />
       <DashboardSidebar />
 
-      {/*
-        FIX: DashboardSidebar isn't position:fixed, so the flex row already
-        reserves its width. The old `md:ml-60` stacked a second offset on
-        top of that and pushed everything far right of the sidebar.
-      */}
+      
       <main className="min-w-0 flex-1 px-4 py-8 sm:px-6 md:px-10 md:py-12">
         {/* Header */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">

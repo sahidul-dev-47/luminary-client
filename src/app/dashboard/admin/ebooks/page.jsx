@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import toast from "react-hot-toast";
 import DashboardSidebar from "@/components/dashboard/DashboardSidebar";
+import { authFetch } from "@/lib/clientFetch";
 
 const display = Fraunces({
   subsets: ["latin"],
@@ -27,8 +28,7 @@ const display = Fraunces({
 });
 const body = Inter({ subsets: ["latin"], variable: "--font-body" });
 
-// Same tokens as the rest of the admin panel (Ledger / Membership Roll)
-// so the three admin screens read as one product, not three.
+
 const PALETTE = {
   gold: "#D4A657",
   rose: "#E2836F",
@@ -37,7 +37,7 @@ const PALETTE = {
   card: "#161922",
 };
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000";
+
 
 const STATUS_FILTERS = [
   { key: "all", label: "All" },
@@ -60,7 +60,7 @@ export default function ManageEbooks() {
   const fetchEbooks = async () => {
     try {
       setLoading(true);
-      const res = await fetch(`${BACKEND_URL}/api/v1/admin/ebooks`);
+      const res = await authFetch(`/api/v1/admin/ebooks`);
       const data = await res.json();
 
       if (data.success) {
@@ -88,7 +88,7 @@ export default function ManageEbooks() {
     setEbooks((prev) => prev.map((b) => (b._id === book._id ? { ...b, status: nextStatus } : b)));
 
     try {
-      const res = await fetch(`${BACKEND_URL}/api/v1/admin/ebooks/${book._id}/toggle-status`, {
+      const res = await authFetch(`/api/v1/admin/ebooks/${book._id}/toggle-status`, {
         method: "PATCH",
       });
       const data = await res.json();
@@ -110,7 +110,7 @@ export default function ManageEbooks() {
     if (!deleteTarget) return;
     setDeleting(true);
     try {
-      const res = await fetch(`${BACKEND_URL}/api/v1/admin/ebooks/${deleteTarget._id}`, {
+      const res = await authFetch(`/api/v1/admin/ebooks/${deleteTarget._id}`, {
         method: "DELETE",
       });
       const data = await res.json();
@@ -150,14 +150,6 @@ export default function ManageEbooks() {
       style={{ backgroundColor: PALETTE.ink }}
     >
       <DashboardSidebar />
-
-      {/*
-        FIX: the sidebar sits inline in this flex row (it is not position:fixed),
-        so flex-1 alone already gives <main> the remaining width. The previous
-        `md:ml-60` added a *second* offset on top of that, shoving all content
-        far to the right of the sidebar. min-w-0 stops the table from forcing
-        the flex item wider than the viewport on smaller desktop sizes.
-      */}
       <main className="min-w-0 flex-1 px-4 py-8 sm:px-6 md:px-10 md:py-12">
         {/* Header */}
         <div className="mb-8 flex flex-col gap-1">

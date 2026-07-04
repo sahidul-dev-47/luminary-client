@@ -10,6 +10,7 @@ import {
   ArrowUpRight, PackageCheck, Clock, Award, Receipt,
   ChevronUp, ChevronDown,
 } from "lucide-react";
+import { authFetch } from "@/lib/clientFetch";
 
 const FD = "'Playfair Display',Georgia,serif";
 const F  = "'Inter',system-ui,sans-serif";
@@ -32,34 +33,31 @@ export default function WriterDashboard() {
   const [analytics, setAnalytics] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const API_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
+  
 
   const fetchWriterData = useCallback(async (writerId, writerEmail) => {
-    try {
-      setLoading(true);
+  try {
+    setLoading(true);
+    const [ebooksRes, salesRes, analyticsRes] = await Promise.all([
+      authFetch(`/api/v1/writer/ebooks?writerId=${writerId}`),
+      authFetch(`/api/v1/writer/sales?writerEmail=${writerEmail}`),
+      authFetch(`/api/v1/writer/analytics?writerId=${writerId}`)
+    ]);
 
-      const [ebooksRes, salesRes, analyticsRes] = await Promise.all([
-        fetch(`${API_URL}/api/v1/writer/ebooks?writerId=${writerId}`),
-        fetch(`${API_URL}/api/v1/writer/sales?writerEmail=${writerEmail}`),
-        fetch(`${API_URL}/api/v1/writer/analytics?writerId=${writerId}`)
-      ]);
+    const ebooksData = await ebooksRes.json();
+    if (ebooksData.success) setEbooks(ebooksData.ebooks || []);
 
-      const ebooksData = await ebooksRes.json();
-      if (ebooksData.success) setEbooks(ebooksData.ebooks || []);
+    const salesData = await salesRes.json();
+    if (salesData.success) setSales(salesData.sales || []);
 
-      const salesData = await salesRes.json();
-      if (salesData.success) setSales(salesData.sales || []);
-
-      const analyticsData = await analyticsRes.json();
-      if (analyticsData.success) setAnalytics(analyticsData.analytics);
-
-    } catch (err) {
-      console.error("Failed to load writer data", err);
-    } finally {
-      setLoading(false);
-    }
-  }, [API_URL]);
-
+    const analyticsData = await analyticsRes.json();
+    if (analyticsData.success) setAnalytics(analyticsData.analytics);
+  } catch (err) {
+    console.error("Failed to load writer data", err);
+  } finally {
+    setLoading(false);
+  }
+}, []); 
  useEffect(() => {
   if (isSessionLoading) return;
 

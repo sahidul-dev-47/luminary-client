@@ -7,10 +7,11 @@ import {
   TrendingUp, CheckCircle2, Circle, PenLine, ImageOff,
 } from 'lucide-react';
 import { authClient, signOut } from '@/lib/auth-client';
+import { authFetch } from '@/lib/clientFetch';
 
 const FD = "'Playfair Display',Georgia,serif";
 const F  = "'Inter',system-ui,sans-serif";
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+
 
 function StatCard({ Icon, label, value, color }) {
   return (
@@ -105,8 +106,8 @@ export default function WriterProfile() {
       try {
         const writerId = user.id || user.email;
         const [ebooksRes, salesRes] = await Promise.all([
-          fetch(`${API_URL}/api/v1/writer/ebooks?writerId=${encodeURIComponent(writerId)}`).then(r => r.json()),
-          fetch(`${API_URL}/api/v1/writer/sales?writerEmail=${encodeURIComponent(user.email)}`).then(r => r.json()),
+          authFetch(`/api/v1/writer/ebooks?writerId=${encodeURIComponent(writerId)}`).then(r => r.json()),
+          authFetch(`/api/v1/writer/sales?writerEmail=${encodeURIComponent(user.email)}`).then(r => r.json()),
         ]);
         setData({
           ebooks: ebooksRes?.ebooks || [],

@@ -10,8 +10,9 @@ import {
   Pencil, Trash2, Loader2, BookX, PlusCircle,
   Clock, CheckCircle2, AlertTriangle, X,
 } from "lucide-react";
+import { authFetch } from "@/lib/clientFetch";
 
-const API_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
+
 
 const TABS = [
   { key: "all", label: "All" },
@@ -33,7 +34,7 @@ export default function MyEbooksPage() {
     if (!user?.id) return;
     setLoading(true);
     try {
-      const res = await fetch(`${API_URL}/api/v1/writer/ebooks?writerId=${user.id}`);
+      const res = await authFetch(`/api/v1/writer/ebooks?writerId=${user.id}`);
       const data = await res.json();
       if (data.success) setEbooks(data.ebooks);
     } catch (err) {
@@ -53,7 +54,7 @@ export default function MyEbooksPage() {
     const id = deleteTarget._id;
     setBusyId(id);
     try {
-      const res = await fetch(`${API_URL}/api/v1/writer/ebooks/${id}?writerId=${user.id}`, {
+      const res = await authFetch(`/api/v1/writer/ebooks/${id}?writerId=${user.id}`, {
         method: "DELETE",
       });
       const data = await res.json();

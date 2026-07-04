@@ -5,8 +5,9 @@ import Link from "next/link";
 import Image from "next/image";
 import { authClient } from "@/lib/auth-client";
 import { Loader2, Bookmark, Heart } from "lucide-react";
+import { authFetch } from "@/lib/clientFetch";
 
-const API_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
+
 
 export default function WriterBookmarksPage() {
   const { data: session } = authClient.useSession();
@@ -20,7 +21,7 @@ export default function WriterBookmarksPage() {
 
     const fetchBookmarks = async () => {
       try {
-        const res = await fetch(`${API_URL}/api/v1/users/bookmarks?email=${user.email}`);
+        const res = await authFetch(`/api/v1/users/bookmarks?email=${user.email}`);
         const data = await res.json();
         if (data.success) setBookmarks(data.bookmarks);
       } catch (err) {
@@ -38,7 +39,7 @@ export default function WriterBookmarksPage() {
     if (!user?.email) return;
 
     try {
-      const res = await fetch(`${API_URL}/api/v1/users/bookmark`, {
+      const res = await authFetch(`/api/v1/users/bookmark`, {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",

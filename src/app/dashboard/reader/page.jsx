@@ -8,6 +8,7 @@ import {
   ShoppingCart, BookOpen, Bookmark, Wallet,
   ArrowUpRight, Settings, Library
 } from "lucide-react";
+import { authFetch } from "@/lib/clientFetch";
 
 const FD = "'Playfair Display',Georgia,serif";
 const F  = "'Inter',system-ui,sans-serif";
@@ -29,14 +30,14 @@ export default function ReaderDashboard() {
   const [bookmarks, setBookmarks] = useState([]);
   const [loading, setLoading]     = useState(true);
 
-  const API_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
+  
 
   const fetchAll = useCallback(async (email) => {
     try {
       setLoading(true);
       const [purchasesRes, bookmarksRes] = await Promise.all([
-        fetch(`${API_URL}/api/v1/users/purchases?email=${encodeURIComponent(email)}`),
-        fetch(`${API_URL}/api/v1/users/bookmarks?email=${encodeURIComponent(email)}`),
+        authFetch(`/api/v1/users/purchases?email=${encodeURIComponent(email)}`),
+        authFetch(`/api/v1/users/bookmarks?email=${encodeURIComponent(email)}`),
       ]);
 
       const purchasesData = await purchasesRes.json();
@@ -49,7 +50,7 @@ export default function ReaderDashboard() {
     } finally {
       setLoading(false);
     }
-  }, [API_URL]);
+  }, []);
 
   useEffect(() => {
     if (isPending) return;

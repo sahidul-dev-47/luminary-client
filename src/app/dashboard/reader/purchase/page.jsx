@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 import { Loader2, ShoppingCart, ArrowUpRight, CheckCircle2, Clock, XCircle } from 'lucide-react';
 import { authClient } from '@/lib/auth-client';
+import { authFetch } from '@/lib/clientFetch';
 
 const FD = "'Playfair Display',Georgia,serif";
 const F  = "'Inter',system-ui,sans-serif";
@@ -34,8 +35,8 @@ export default function PurchaseHistoryPage() {
     try {
       setLoading(true);
       setError(null);
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/users/purchases?email=${encodeURIComponent(user.email)}`
+      const res = await authFetch(
+        `/api/v1/users/purchases?email=${encodeURIComponent(user.email)}`
       );
       const data = await res.json();
       if (data.success) {

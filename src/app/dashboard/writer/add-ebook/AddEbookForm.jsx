@@ -27,6 +27,7 @@ import {
 
 import { createEbook } from "@/lib/actions/ebook";
 import { authClient } from "@/lib/auth-client";
+import { authFetch } from "@/lib/clientFetch";
 
 const GENRES = [
   "Fiction",
@@ -57,13 +58,13 @@ const ACCENT_RGB = "244,196,48";
 async function uploadToImgBB(file) {
   const formData = new FormData();
   formData.append("image", file);
-  const res = await fetch(
+  const res = await authFetch(
     `https://api.imgbb.com/1/upload?key=${process.env.NEXT_PUBLIC_IMAGE_API}`,
     { method: "POST", body: formData },
   );
   if (!res.ok) throw new Error("Image upload failed");
   const data = await res.json();
-  return data.data.url; // direct image URL
+  return data.data.url; 
 }
 
 // ── Field wrapper ────────────────────────────────────────

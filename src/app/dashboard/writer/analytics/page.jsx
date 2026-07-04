@@ -7,6 +7,7 @@ import {
   BookOpen, TrendingUp, DollarSign, PackageCheck,
   PackageX, ShoppingBag, Award, ChevronUp, ChevronDown,
 } from "lucide-react";
+import { authFetch } from "@/lib/clientFetch";
 
 const FD = "'Playfair Display',Georgia,serif";
 const F  = "'Inter',system-ui,sans-serif";
@@ -29,7 +30,6 @@ export default function WriterAnalytics() {
   const [ebooks, setEbooks] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const API_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
   const user = session?.user;
 
   useEffect(() => {
@@ -39,9 +39,9 @@ export default function WriterAnalytics() {
       setLoading(true);
       try {
         const [analyticsRes, salesRes, ebooksRes] = await Promise.all([
-          fetch(`${API_URL}/api/v1/writer/analytics?writerId=${user.id}`),
-          fetch(`${API_URL}/api/v1/writer/sales?writerId=${user.id}&writerEmail=${user.email}`),
-          fetch(`${API_URL}/api/v1/writer/ebooks?writerId=${user.id}`),
+          authFetch(`/api/v1/writer/analytics?writerId=${user.id}`),
+          authFetch(`/api/v1/writer/sales?writerId=${user.id}&writerEmail=${user.email}`),
+          authFetch(`/api/v1/writer/ebooks?writerId=${user.id}`),
         ]);
 
         const analyticsData = await analyticsRes.json();
@@ -62,7 +62,7 @@ export default function WriterAnalytics() {
     fetchAll();
   }, [user?.id, user?.email]);
 
-  // ── Monthly revenue trend, last 6 months (oldest → newest) ──
+  // ── Monthly revenue 
   const monthlyTrend = useMemo(() => {
     const now = new Date();
     const months = [];

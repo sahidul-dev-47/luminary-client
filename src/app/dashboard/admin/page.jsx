@@ -30,6 +30,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { authClient } from "@/lib/auth-client";
+import { authFetch } from "@/lib/clientFetch";
 
 const display = Fraunces({
   subsets: ["latin"],
@@ -202,9 +203,7 @@ export default function AdminMainDashboard() {
   const [lastSyncedAt, setLastSyncedAt] = useState(null);
   const [secondsAgo, setSecondsAgo] = useState(null);
 
-  const BACKEND_URL =
-    process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000";
-
+  
   const isMountedRef = useRef(true);
   useEffect(() => {
     isMountedRef.current = true;
@@ -231,7 +230,7 @@ export default function AdminMainDashboard() {
           return;
         }
 
-        const res = await fetch(`${BACKEND_URL}/api/v1/admin/analytics`, {
+        const res = await authFetch(`/api/v1/admin/analytics`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -276,7 +275,7 @@ export default function AdminMainDashboard() {
         }
       }
     },
-    [BACKEND_URL],
+    [],
   );
 
   useEffect(() => {

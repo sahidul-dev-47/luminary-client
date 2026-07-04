@@ -18,6 +18,7 @@ import {
   YAxis,
   CartesianGrid,
 } from "recharts";
+import { authFetch } from "@/lib/clientFetch";
 
 const display = Fraunces({
   subsets: ["latin"],
@@ -95,12 +96,12 @@ export default function AdminAnalytics() {
   const [analytics, setAnalytics] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000";
+  
 
   const fetchData = async () => {
     try {
       setError(null);
-      const res = await fetch(`${BACKEND_URL}/api/v1/admin/analytics`);
+      const res = await authFetch(`/api/v1/admin/analytics`);
       const data = await res.json();
       if (data.success) setAnalytics(data.analytics);
       else setError(data.message || "Failed to load analytics");
@@ -135,12 +136,6 @@ export default function AdminAnalytics() {
   return (
     <div className={`${display.variable} ${body.variable} ${body.className} flex min-h-screen bg-[#12141C] text-[#F4F1EA]`}>
       <DashboardSidebar />
-
-      {/*
-        FIX: DashboardSidebar isn't position:fixed, so the flex row already
-        reserves its width — the old `md:ml-60` added a second offset on
-        top of that and pushed all content far right of the sidebar.
-      */}
       <main className="min-w-0 flex-1 px-5 py-8 md:px-10 md:py-12">
         <motion.div initial={{ opacity: 0, y: -14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
           <p className="text-xs uppercase tracking-[0.2em] text-[#8B90A3] mb-2">Deeper Read</p>

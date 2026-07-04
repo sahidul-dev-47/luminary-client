@@ -18,6 +18,7 @@ import {
 import toast, { Toaster } from "react-hot-toast";
 import Link from "next/link";
 import DashboardSidebar from "@/components/dashboard/DashboardSidebar";
+import { authFetch } from "@/lib/clientFetch";
 
 const display = Fraunces({
   subsets: ["latin"],
@@ -35,9 +36,7 @@ const PALETTE = {
   card: "#161922",
 };
 
-// Single source of truth for how each role looks and behaves.
-// Keeping this as one map means the badge, the picker, and the
-// filter chips can never drift out of sync with each other.
+
 const ROLES = {
   user: { label: "Reader", icon: BookOpen, color: PALETTE.teal, blurb: "Browses & purchases ebooks" },
   writer: { label: "Writer", icon: Feather, color: PALETTE.gold, blurb: "Publishes & sells ebooks" },
@@ -76,11 +75,11 @@ export default function ManageUsers() {
   const [roleTarget, setRoleTarget] = useState(null); 
   const [updatingId, setUpdatingId] = useState(null);
 
-  const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000";
+  
 
   const fetchUsers = async () => {
     try {
-      const res = await fetch(`${BACKEND_URL}/api/v1/admin/users`);
+      const res = await authFetch(`/api/v1/admin/users`);
       const data = await res.json();
       if (data.success) {
         setUsers(data.users);
@@ -123,7 +122,7 @@ export default function ManageUsers() {
     const { user, picked } = roleTarget;
     setUpdatingId(user._id);
     try {
-      const res = await fetch(`${BACKEND_URL}/api/v1/admin/users/${user._id}/role`, {
+      const res = await authFetch(`/api/v1/admin/users/${user._id}/role`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ role: picked }),
@@ -148,7 +147,7 @@ export default function ManageUsers() {
     const userId = deleteTarget._id;
     setUpdatingId(userId);
     try {
-      const res = await fetch(`${BACKEND_URL}/api/v1/admin/users/${userId}`, { method: "DELETE" });
+      const res = await authFetch(`/api/v1/admin/users/${userId}`, { method: "DELETE" });
       if (res.ok) {
         toast.success("User removed from the platform");
         setUsers((prev) => prev.filter((u) => u._id !== userId));

@@ -21,8 +21,9 @@ import {
 
 import { updateEbook } from "@/lib/actions/ebook";
 import { authClient } from "@/lib/auth-client";
+import { authFetch } from "@/lib/clientFetch";
 
-const API_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
+
 
 const GENRES = [
   "Fiction",
@@ -51,7 +52,7 @@ const ACCENT_RGB = "244,196,48";
 async function uploadToImgBB(file) {
   const formData = new FormData();
   formData.append("image", file);
-  const res = await fetch(
+  const res = await authFetch(
     `https://api.imgbb.com/1/upload?key=${process.env.NEXT_PUBLIC_IMAGE_API}`,
     { method: "POST", body: formData },
   );
@@ -154,8 +155,8 @@ export default function EditEbookFormPage() {
     const fetchEbook = async () => {
       setLoadingEbook(true);
       try {
-        const res = await fetch(
-          `${API_URL}/api/v1/writer/ebooks/${id}?writerId=${user.id}`,
+        const res = await authFetch(
+          `/api/v1/writer/ebooks/${id}?writerId=${user.id}`,
         );
 
         if (res.status === 403) {

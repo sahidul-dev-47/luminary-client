@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { CheckCircle2, Loader2, ArrowRight, BookOpen } from "lucide-react";
+import { authFetch } from "@/lib/clientFetch";
 
 export default function PaymentSuccessContent() {
   const searchParams = useSearchParams();
@@ -29,7 +30,7 @@ export default function PaymentSuccessContent() {
             ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/payments/verify-status`
             : "http://localhost:5000/api/v1/payments/verify-status";
 
-          const response = await fetch(backendUrl, {
+          const response = await authFetch(backendUrl, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ session_id: sessionId }),

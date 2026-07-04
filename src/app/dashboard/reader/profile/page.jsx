@@ -3,10 +3,11 @@
 import { useState, useEffect } from 'react';
 import { Loader2, LogOut, Mail, Calendar, Shield, BookOpen, Bookmark, Wallet, Sparkles } from 'lucide-react';
 import { authClient, signOut } from '@/lib/auth-client';
+import { authFetch } from '@/lib/clientFetch';
 
 const FD = "'Playfair Display',Georgia,serif";
 const F  = "'Inter',system-ui,sans-serif";
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+
 
 function StatCard({ Icon, label, value, color }) {
   return (
@@ -44,8 +45,8 @@ export default function ReaderProfile() {
     (async () => {
       try {
         const [purchaseRes, bookmarkRes] = await Promise.all([
-          fetch(`${API_URL}/api/v1/users/purchases?email=${encodeURIComponent(user.email)}`).then(r => r.json()),
-          fetch(`${API_URL}/api/v1/users/bookmarks?email=${encodeURIComponent(user.email)}`).then(r => r.json()),
+          authFetch(`/api/v1/users/purchases?email=${encodeURIComponent(user.email)}`).then(r => r.json()),
+          authFetch(`/api/v1/users/bookmarks?email=${encodeURIComponent(user.email)}`).then(r => r.json()),
         ]);
         setStats({
           purchases: purchaseRes?.purchases || [],
