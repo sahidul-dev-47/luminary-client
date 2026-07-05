@@ -102,7 +102,7 @@ export default function ReaderDashboard() {
   ];
 
   const drawers = [
-    { href: "/dashboard/purchase",        title: "Purchase History", sub: "Every book you've bought",  Icon: ShoppingCart },
+    { href: "/dashboard/reader/purchase",        title: "Purchase History", sub: "Every book you've bought",  Icon: ShoppingCart },
     { href: "/dashboard/reader/library",  title: "My Library",       sub: "Read what you own",          Icon: BookOpen     },
     { href: "/dashboard/reader/bookmarks",title: "Bookmarks",        sub: "Saved for later",            Icon: Bookmark     },
     { href: "/dashboard/reader/profile",  title: "Profile",          sub: "Manage your account",        Icon: Settings     },
@@ -262,7 +262,7 @@ export default function ReaderDashboard() {
         <div>
           <div style={{ display:"flex", justifyContent:"space-between", alignItems:"baseline", marginBottom:18 }}>
             <h2 style={{ fontFamily:FD, fontSize:21, fontWeight:700 }}>Recently Purchased</h2>
-            <Link href="/dashboard/purchase" style={{ fontSize:12.5, color:GOLD, textDecoration:"none", fontWeight:600 }}>
+            <Link href="/dashboard/reader/purchase" style={{ fontSize:12.5, color:GOLD, textDecoration:"none", fontWeight:600 }}>
               View full history →
             </Link>
           </div>
