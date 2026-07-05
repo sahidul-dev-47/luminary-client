@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
@@ -105,7 +106,6 @@ const ROLE_META = {
   },
 };
 
-// Logo Component
 function Logo() {
   return (
     <Link
@@ -184,7 +184,6 @@ function Logo() {
   );
 }
 
-// NavLink Component
 function NavLink({ href, label, Icon, active, accent, roleColor, onClick }) {
   const base = {
     fontFamily: F,
@@ -265,7 +264,6 @@ function NavLink({ href, label, Icon, active, accent, roleColor, onClick }) {
   );
 }
 
-// Sidebar Content
 function SidebarContent({
   role,
   rm,
@@ -481,26 +479,36 @@ function SidebarContent({
     </div>
   );
 }
+
 const SIDEBAR_STYLE = {
-  background: '#0A0918',
-  width: '240px',
+  background: "#0A0918",
+  width: "240px",
   flexShrink: 0,
-  
 };
 
 export default function DashboardSidebar() {
   const pathname = usePathname();
-  const { data: session } = authClient.useSession();
+  const { data: session, refetch: refetchSession } = authClient.useSession();
+
+  // NEW: guards portal so it only renders on the client (avoids SSR mismatch)
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
   useEffect(() => {
     authClient.getSession({ query: { disableCookieCache: true } });
-  }, []);
+    refetchSession?.();
+
+    const retry = setTimeout(() => {
+      authClient.getSession({ query: { disableCookieCache: true } });
+      refetchSession?.();
+    }, 700);
+
+    return () => clearTimeout(retry);
+  }, [refetchSession]);
 
   const role = session?.user?.appRole ?? "Reader";
   const rm = ROLE_META[role] ?? ROLE_META.Reader;
   const links = NAV[role] ?? NAV.Reader;
-
-  
 
   const [mobileOpen, setMobileOpen] = useState(false);
   const closeMobile = () => setMobileOpen(false);
@@ -527,50 +535,19 @@ export default function DashboardSidebar() {
     return () => mql.removeEventListener("change", handleChange);
   }, [mobileOpen]);
 
-  return (
+  // NEW: mobile header + drawer, unchanged markup, just pulled into a
+  // variable so it can be sent through a portal below
+  const mobileUI = (
     <>
-      <style>{`
-        @keyframes lp { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(.65)} }
-        .lum-nav::-webkit-scrollbar { display:none }
-      `}</style>
-
-      {/* Desktop Sidebar */}
-      <aside
-        className="hidden md:block"
-        style={{
-          ...SIDEBAR_STYLE,
-          position: "fixed",
-          left: 0,
-          top: 0,
-          height: "100vh",
-          zIndex: 40,
-          boxSizing: "border-box",
-        }}
-      >
-        <div style={{ position: "relative", zIndex: 10, height: "100%" }}>
-          <SidebarContent
-            role={role}
-            rm={rm}
-            links={links}
-            pathname={pathname}
-            session={session}
-            onLinkClick={undefined}
-            onLogout={handleLogout}
-          />
-        </div>
-      </aside>
-
-      {/* Mobile Top Bar */}
       <header
-        className="md:hidden"
+        className="flex md:hidden"
         style={{
           position: "fixed",
           top: 0,
           left: 0,
           right: 0,
-          zIndex: 50,
+          zIndex: 9999,
           height: 56,
-          display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
           padding: "0 16px",
@@ -609,7 +586,6 @@ export default function DashboardSidebar() {
         </button>
       </header>
 
-      {/* Mobile Drawer */}
       <AnimatePresence>
         {mobileOpen && (
           <>
@@ -618,7 +594,7 @@ export default function DashboardSidebar() {
               style={{
                 position: "fixed",
                 inset: 0,
-                zIndex: 40,
+                zIndex: 9997,
                 background: "rgba(0,0,0,0.6)",
                 backdropFilter: "blur(4px)",
               }}
@@ -636,8 +612,8 @@ export default function DashboardSidebar() {
                 top: 0,
                 width: 260,
                 maxWidth: "86vw",
-                height: "100vh",
-                zIndex: 50,
+                height: "100dvh",
+                zIndex: 9998,
                 overflow: "hidden",
               }}
               initial={{ x: -260 }}
@@ -661,6 +637,42 @@ export default function DashboardSidebar() {
           </>
         )}
       </AnimatePresence>
+    </>
+  );
+
+  return (
+    <>
+      <style>{`
+        @keyframes lp { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(.65)} }
+        .lum-nav::-webkit-scrollbar { display:none }
+      `}</style>
+
+      {/* Desktop Sidebar */}
+      <aside
+        className="hidden md:block"
+        style={{
+          ...SIDEBAR_STYLE,
+          position: "fixed",
+          left: 0,
+          top: 0,
+          height: "100dvh",
+          zIndex: 40,
+          boxSizing: "border-box",
+        }}
+      >
+        <div style={{ position: "relative", zIndex: 10, height: "100%" }}>
+          <SidebarContent
+            role={role}
+            rm={rm}
+            links={links}
+            pathname={pathname}
+            session={session}
+            onLinkClick={undefined}
+            onLogout={handleLogout}
+          />
+        </div>
+      </aside>
+      {mounted && createPortal(mobileUI, document.body)}
     </>
   );
 }

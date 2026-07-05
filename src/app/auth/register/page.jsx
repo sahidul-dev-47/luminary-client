@@ -354,7 +354,7 @@ const handleRoleSelect = async (selectedRole) => {
 
   return (
     <div
-      className="min-h-screen flex items-center justify-center p-5"
+      className="min-h-screen flex items-center justify-center p-3 sm:p-5"
       style={{
         background: "#07070E",
         position: "relative",
@@ -371,16 +371,14 @@ const handleRoleSelect = async (selectedRole) => {
       />
 
       <div
-        className="reg-grid relative z-10 w-full max-w-[860px] overflow-hidden rounded-[20px]"
+        className="reg-grid relative z-10 w-full max-w-[860px] overflow-hidden rounded-[20px] grid grid-cols-1 md:grid-cols-2"
         style={{
-          display: "grid",
-          gridTemplateColumns: "1fr 1fr",
           border: "0.5px solid rgba(244,196,48,0.12)",
         }}
       >
         {/* Left Panel */}
         <div
-          className="reg-left flex flex-col justify-between p-10 relative"
+          className="reg-left flex flex-col justify-between p-6 sm:p-8 md:p-10 relative min-h-[280px] md:min-h-0"
           style={{
             background:
               "linear-gradient(145deg,#0E0D1F 0%,#12101E 60%,#0A0918 100%)",
@@ -436,7 +434,7 @@ const handleRoleSelect = async (selectedRole) => {
 
         {/* Right Panel */}
         <div
-          className="flex flex-col justify-center p-9"
+          className="flex flex-col justify-center p-6 sm:p-8 md:p-9"
           style={{ background: "#0C0B1A" }}
         >
           <h1
@@ -553,27 +551,27 @@ const handleRoleSelect = async (selectedRole) => {
       {/* Role Selection Modal */}
       <AnimatePresence>
         {showRoleModal && (
-          <div className="fixed inset-0 bg-black/90 z-[9999] flex items-center justify-center p-4">
+          <div className="fixed inset-0 bg-black/90 z-[9999] flex items-center justify-center p-4 overflow-y-auto">
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.9 }}
-              className="bg-[#0C0B1A] rounded-3xl p-8 max-w-sm w-full border border-[#F4C430]/30"
+              className="bg-[#0C0B1A] rounded-3xl p-5 sm:p-8 max-w-sm w-full border border-[#F4C430]/30 my-auto"
             >
-              <h2 className="text-2xl font-bold text-center mb-2">
+              <h2 className="text-xl sm:text-2xl font-bold text-center mb-2">
                 Choose your role
               </h2>
-              <p className="text-center text-[#94A3B8] mb-8">
+              <p className="text-center text-[#94A3B8] mb-8 text-sm sm:text-base">
                 This defines your experience on Luminary
               </p>
 
               <div className="space-y-4">
                 <button
                   onClick={() => handleRoleSelect("Reader")}
-                  className="w-full p-6 rounded-2xl border hover:border-[#F4C430] text-left transition-all"
+                  className="w-full p-4 sm:p-6 rounded-2xl border hover:border-[#F4C430] text-left transition-all"
                 >
-                  <div className="text-4xl mb-3">📖</div>
-                  <h3 className="text-xl font-semibold">Reader</h3>
+                  <div className="text-3xl sm:text-4xl mb-3">📖</div>
+                  <h3 className="text-lg sm:text-xl font-semibold">Reader</h3>
                   <p className="text-sm text-gray-400">
                     Browse, read and collect books
                   </p>
@@ -581,10 +579,10 @@ const handleRoleSelect = async (selectedRole) => {
 
                 <button
                   onClick={() => handleRoleSelect("Writer")}
-                  className="w-full p-6 rounded-2xl border hover:border-[#F4C430] text-left transition-all"
+                  className="w-full p-4 sm:p-6 rounded-2xl border hover:border-[#F4C430] text-left transition-all"
                 >
-                  <div className="text-4xl mb-3">✍️</div>
-                  <h3 className="text-xl font-semibold">Writer</h3>
+                  <div className="text-3xl sm:text-4xl mb-3">✍️</div>
+                  <h3 className="text-lg sm:text-xl font-semibold">Writer</h3>
                   <p className="text-sm text-gray-400">
                     Publish books and earn money
                   </p>
