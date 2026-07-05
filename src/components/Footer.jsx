@@ -68,7 +68,7 @@ function BookSpines() {
     alpha: parseFloat((0.04 + i * 0.012).toFixed(3)),
   }));
   return (
-    <div className="absolute bottom-0 right-0 pointer-events-none"
+    <div className="absolute bottom-0 right-0 pointer-events-none hidden sm:block"
       style={{ width: 180, height: 260, zIndex: 1, opacity: 0.5 }} aria-hidden="true">
       {spines.map((s, i) => (
         <div key={i} className="absolute bottom-0" style={{
@@ -136,17 +136,17 @@ function Newsletter() {
           </motion.div>
         ) : (
           <motion.form key="form" initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-            onSubmit={handleSubmit} className="flex gap-2">
+            onSubmit={handleSubmit} className="flex flex-col xs:flex-row gap-2">
             <input type="email" value={email} onChange={(e) => setEmail(e.target.value)}
               placeholder="your@email.com"
-              className="flex-1 px-4 py-2.5 rounded-[9px] text-[12.5px] outline-none transition-all duration-200"
+              className="flex-1 min-w-0 px-4 py-2.5 rounded-[9px] text-[12.5px] outline-none transition-all duration-200"
               style={{ background: "rgba(255,255,255,0.04)", border: "0.5px solid rgba(255,255,255,0.1)",
                 color: "#F8FAFC", fontFamily: "'Inter',sans-serif" }}
               onFocus={e => (e.target.style.borderColor = "rgba(244,196,48,0.4)")}
               onBlur={e  => (e.target.style.borderColor = "rgba(255,255,255,0.1)")} />
             <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.96 }}
               type="submit" disabled={state === "sending"}
-              className="flex items-center gap-1.5 px-4 py-2.5 rounded-[9px] text-[12px] font-semibold"
+              className="flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-[9px] text-[12px] font-semibold flex-shrink-0"
               style={{ background: "#F4C430", color: "#07070E",
                 fontFamily: "'Inter',sans-serif", opacity: state === "sending" ? 0.7 : 1 }}>
               {state === "sending" ? <span className="lum-spinner" /> : <Send size={12} strokeWidth={2.2} />}
@@ -267,10 +267,16 @@ export default function Footer() {
           border: 2px solid rgba(7,7,14,0.3); border-top-color: #07070E;
           border-radius: 50%; animation: lum-spin 0.7s linear infinite;
         }
-        @media (max-width: 900px) { .lum-footer-grid { grid-template-columns: 1fr 1fr !important; } }
+        .lum-footer-grid { gap: 3rem; }
+        @media (max-width: 900px) {
+          .lum-footer-grid { grid-template-columns: 1fr 1fr !important; gap: 2rem; }
+        }
         @media (max-width: 580px) {
-          .lum-footer-grid { grid-template-columns: 1fr !important; }
+          .lum-footer-grid { grid-template-columns: 1fr !important; gap: 1.75rem; }
           .lum-stats-grid  { grid-template-columns: 1fr 1fr !important; }
+        }
+        @media (max-width: 380px) {
+          .xs\\:flex-row { flex-direction: column; }
         }
       `}</style>
 
@@ -289,16 +295,16 @@ export default function Footer() {
         initial={{ opacity: 0, y: 24 }} animate={inView ? { opacity: 1, y: 0 } : {}}
         transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
         style={{ borderBottom: "0.5px solid rgba(255,255,255,0.05)", position: "relative", zIndex: 2 }}>
-        <div className="lum-stats-grid max-w-[1180px] mx-auto px-10"
+        <div className="lum-stats-grid max-w-[1180px] mx-auto px-5 sm:px-6 lg:px-10"
           style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)" }}>
           {STATS.map((s, i) => (
-            <div key={i} className="py-7 text-center"
+            <div key={i} className="py-5 sm:py-6 lg:py-7 text-center"
               style={{ borderRight: i < STATS.length - 1 ? "0.5px solid rgba(255,255,255,0.05)" : "none" }}>
-              <div className="text-[24px] font-bold leading-none mb-1.5"
+              <div className="text-[18px] sm:text-[20px] lg:text-[24px] font-bold leading-none mb-1.5"
                 style={{ fontFamily: "'Playfair Display',serif", color: "#F4C430" }}>
                 {s.dollar ? "$" : ""}<CountUp to={s.n} suffix={s.suffix} />
               </div>
-              <div className="text-[10px] tracking-widest uppercase"
+              <div className="text-[9px] sm:text-[10px] tracking-widest uppercase"
                 style={{ color: "#1E293B", fontFamily: "'Inter',sans-serif" }}>
                 {s.label}
               </div>
@@ -308,9 +314,9 @@ export default function Footer() {
       </motion.div>
 
       {/* ── Main grid ── */}
-      <div className="relative max-w-[1180px] mx-auto px-10 pt-14 pb-10" style={{ zIndex: 2 }}>
+      <div className="relative max-w-[1180px] mx-auto px-5 sm:px-6 lg:px-10 pt-10 sm:pt-12 lg:pt-14 pb-8 sm:pb-10" style={{ zIndex: 2 }}>
         <div className="lum-footer-grid"
-          style={{ display: "grid", gridTemplateColumns: "1.4fr repeat(4,1fr)", gap: "3rem" }}>
+          style={{ display: "grid", gridTemplateColumns: "1.4fr repeat(4,1fr)" }}>
 
           {/* ── Brand column ── */}
           <motion.div initial={{ opacity: 0, y: 20 }} animate={inView ? { opacity: 1, y: 0 } : {}}
@@ -414,7 +420,7 @@ export default function Footer() {
         {/* ── Newsletter + reviews strip ── */}
         <motion.div initial={{ opacity: 0, y: 16 }} animate={inView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.5, delay: 0.4 }}
-          className="mt-12 rounded-2xl px-8 py-7"
+          className="mt-12 rounded-2xl px-5 sm:px-6 lg:px-8 py-6 sm:py-7"
           style={{ background: "rgba(255,255,255,0.02)", border: "0.5px solid rgba(255,255,255,0.06)" }}>
           <div className="grid md:grid-cols-2 gap-8 items-center">
             <Newsletter />
@@ -449,10 +455,10 @@ export default function Footer() {
         {/* ── Bottom bar ── */}
         <motion.div initial={{ opacity: 0 }} animate={inView ? { opacity: 1 } : {}}
           transition={{ duration: 0.5, delay: 0.55 }}
-          className="mt-8 pt-6 flex flex-col md:flex-row items-center justify-between gap-4"
+          className="mt-8 pt-6 flex flex-col md:flex-row items-center justify-between gap-3 sm:gap-4"
           style={{ borderTop: "0.5px solid rgba(255,255,255,0.05)" }}>
 
-          <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4">
+          <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 text-center">
             <p className="text-[11.5px]"
               style={{ color: "#1E293B", fontFamily: "'Inter',sans-serif" }}>
               © <CopyrightYear /> Luminary. Crafted for curious minds.
@@ -467,7 +473,7 @@ export default function Footer() {
             </a>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3 sm:gap-4 flex-wrap justify-center">
             {["Privacy", "Terms", "Cookies"].map((t) => (
               <Link key={t} href="#" className="text-[11.5px] transition-colors duration-150"
                 style={{ color: "#1E293B", fontFamily: "'Inter',sans-serif" }}
@@ -488,7 +494,7 @@ export default function Footer() {
         </motion.div>
       </div>
 
-      {/* Book spines — client-only */}
+     
       <BookSpines />
     </footer>
   );

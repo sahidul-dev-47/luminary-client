@@ -169,6 +169,20 @@ export default function WriterDashboard() {
         .lu-sale-row:hover { background: rgba(255,255,255,0.02); }
         .lu-trend-bar { transition: filter .15s; }
         .lu-trend-bar:hover { filter: brightness(1.2); }
+
+        .lu-container { padding: 56px 24px 80px; }
+        .lu-grid-2a { grid-template-columns: 1.6fr 1fr; }
+        .lu-grid-2b { grid-template-columns: 1.4fr 1fr; }
+        .lu-cta-link { width: auto; text-align: center; justify-content: center; }
+
+        @media (max-width: 860px) {
+          .lu-grid-2a { grid-template-columns: 1fr !important; }
+          .lu-grid-2b { grid-template-columns: 1fr !important; }
+        }
+        @media (max-width: 640px) {
+          .lu-container { padding: 32px 16px 56px !important; }
+          .lu-cta-link { width: 100%; }
+        }
       `}</style>
 
       <div style={{ position:"absolute", top:0, left:0, right:0, height:280, pointerEvents:"none",
@@ -176,7 +190,7 @@ export default function WriterDashboard() {
       <div style={{ position:"absolute", inset:0, pointerEvents:"none",
         backgroundImage:"radial-gradient(rgba(255,255,255,0.025) 1px,transparent 1px)", backgroundSize:"22px 22px" }} />
 
-      <div style={{ position:"relative", zIndex:1, maxWidth:1160, margin:"0 auto", padding:"56px 24px 80px" }}>
+      <div className="lu-container" style={{ position:"relative", zIndex:1, maxWidth:1160, margin:"0 auto" }}>
 
         {/* ── Masthead ─────────────────────────────── */}
         <div style={{ borderBottom:`1px solid ${HAIR}`, paddingBottom:28, marginBottom:40,
@@ -195,7 +209,7 @@ export default function WriterDashboard() {
 
           <Link
             href="/dashboard/writer/add-ebook"
-            className="lu-cta"
+            className="lu-cta lu-cta-link"
             style={{
               display:"flex", alignItems:"center", gap:9,
               padding:"13px 22px", borderRadius:11,
@@ -240,7 +254,7 @@ export default function WriterDashboard() {
         </div>
 
         {/* ── Revenue trend + Top performer ────────── */}
-        <div style={{ display:"grid", gridTemplateColumns:"1.6fr 1fr", gap:20, marginBottom:40 }}>
+        <div className="lu-grid-2a" style={{ display:"grid", gap:20, marginBottom:40 }}>
 
           {/* Revenue trend chart */}
           <div style={{ border:`1px solid ${HAIR}`, borderRadius:16, padding:"22px 24px 16px", background:"rgba(255,255,255,0.015)" }}>
@@ -339,7 +353,7 @@ export default function WriterDashboard() {
         </div>
 
         {/* ── Manuscripts + Recent sales, side by side ── */}
-        <div style={{ display:"grid", gridTemplateColumns:"1.4fr 1fr", gap:24 }}>
+        <div className="lu-grid-2b" style={{ display:"grid", gap:24 }}>
 
           {/* Recent manuscripts shelf */}
           <div>

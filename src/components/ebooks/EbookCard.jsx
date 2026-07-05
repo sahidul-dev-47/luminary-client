@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { motion } from "framer-motion";
 import { Tag, DollarSign, ShoppingCart, CheckCircle, User, BookOpen } from "lucide-react";
 import Link from "next/link";
@@ -51,13 +52,17 @@ export default function EbookCard({ ebook }) {
       }}
     >
       {/* ── Cover image ──────────────────────────────── */}
-      <Link href={`/ebooks/${_id}`} className="relative block overflow-hidden" style={{ height: 220 }}>
-        <img
+      <Link
+        href={`/ebooks/${_id}`}
+        className="relative block overflow-hidden h-44 sm:h-52 md:h-56 lg:h-60"
+      >
+        <Image
           src={coverImage || "https://images.unsplash.com/photo-1543002588-bfa74002ed7e?w=500&q=75"}
           alt={title}
+          fill
+          sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
           loading="lazy"
-          decoding="async"
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+          className="object-cover"
           style={{ transform: "scale(1)", transition: "transform .5s ease" }}
           onMouseEnter={e => e.currentTarget.style.transform = "scale(1.05)"}
           onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}
@@ -79,7 +84,7 @@ export default function EbookCard({ ebook }) {
         </div>
 
         {/* spine line (book feel) */}
-        <div className="absolute left-0 inset-y-0 w-1.5" style={{ background: `rgba(${rgb},0.5)` }} />
+        <div className="absolute left-0 inset-y-0 w-1.5 z-10" style={{ background: `rgba(${rgb},0.5)` }} />
       </Link>
 
       {/* ── Genre badge — top left ── */}
@@ -107,10 +112,10 @@ export default function EbookCard({ ebook }) {
       </div>
 
       {/* ── Card body ──────────────────────────────── */}
-      <div className="flex flex-col flex-1 p-4">
+      <div className="flex flex-col flex-1 p-3 sm:p-4">
         {/* Title */}
         <Link href={`/ebooks/${_id}`}
-          className="block text-[14.5px] font-bold leading-snug line-clamp-1 mb-1.5 transition-colors duration-150"
+          className="block text-[13.5px] sm:text-[14.5px] font-bold leading-snug line-clamp-1 mb-1.5 transition-colors duration-150"
           style={{ fontFamily: FD, color: "#EDE9E0" }}
           onMouseEnter={e => e.currentTarget.style.color = color}
           onMouseLeave={e => e.currentTarget.style.color = "#EDE9E0"}>
@@ -118,9 +123,9 @@ export default function EbookCard({ ebook }) {
         </Link>
 
         {/* Writer */}
-        <div className="flex items-center gap-1.5 mb-4" style={{ color: "#334155" }}>
+        <div className="flex items-center gap-1.5 mb-3 sm:mb-4" style={{ color: "#334155" }}>
           <User size={12} strokeWidth={1.8} />
-          <span className="text-[12px] hover:underline cursor-pointer transition-colors duration-150"
+          <span className="text-[11.5px] sm:text-[12px] hover:underline cursor-pointer transition-colors duration-150"
             style={{ fontFamily: F }}
             onMouseEnter={e => e.currentTarget.style.color = "#64748B"}
             onMouseLeave={e => e.currentTarget.style.color = "#334155"}>
@@ -130,11 +135,11 @@ export default function EbookCard({ ebook }) {
 
         {/* Divider */}
         <div className="mt-auto pt-3" style={{ borderTop: "0.5px solid rgba(255,255,255,0.06)" }}>
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-2">
             {/* Price */}
             <div className="flex items-baseline gap-0.5">
               <DollarSign size={13} strokeWidth={2.2} style={{ color }} />
-              <span className="text-[18px] font-bold leading-none" style={{ fontFamily: FD, color }}>
+              <span className="text-[16px] sm:text-[18px] font-bold leading-none" style={{ fontFamily: FD, color }}>
                 {price.toFixed(2)}
               </span>
             </div>
@@ -143,7 +148,7 @@ export default function EbookCard({ ebook }) {
             <Link href={`/ebooks/${_id}`}>
               <button
                 disabled={sold}
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-[9px] text-[12px] font-semibold transition-all duration-200 active:scale-95"
+                className="inline-flex items-center gap-1.5 px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-[9px] text-[11px] sm:text-[12px] font-semibold transition-all duration-200 active:scale-95 whitespace-nowrap"
                 style={
                   sold
                     ? { background: "rgba(255,255,255,0.04)", color: "#334155", border: "0.5px solid rgba(255,255,255,0.07)", cursor: "not-allowed", fontFamily: F }
