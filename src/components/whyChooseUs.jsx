@@ -126,7 +126,7 @@ export default function WhyChooseUs() {
           className="inline-flex items-center gap-2 mb-5 px-3 py-1.5 rounded-full text-[11px] font-semibold tracking-widest uppercase"
           style={{ background: "rgba(244,196,48,0.12)", border: "0.5px solid rgba(244,196,48,0.3)", color: "#F4C430", fontFamily: "'JetBrains Mono', monospace" }}
         >
-          Why Fable
+          Why Luminary 
         </div>
         <h1
           className="leading-[1.1] mb-5"
