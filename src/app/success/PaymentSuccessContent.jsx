@@ -1,64 +1,79 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { CheckCircle2, Loader2, ArrowRight, BookOpen } from "lucide-react";
 import { authFetch } from "@/lib/clientFetch";
+import { authClient } from "@/lib/auth-client";
 
 export default function PaymentSuccessContent() {
   const searchParams = useSearchParams();
-  const router = useRouter();
+  const { data: session } = authClient.useSession();
 
-  const success = searchParams.get("success");
+  const successParam = searchParams.get("success");
   const sessionId = searchParams.get("session_id");
 
   const [loading, setLoading] = useState(true);
   const [statusMessage, setStatusMessage] = useState("Verifying your payment...");
+  const [isSuccess, setIsSuccess] = useState(false);
+  const [errorDetails, setErrorDetails] = useState("");
 
   const effectRan = useRef(false);
 
   useEffect(() => {
-    if (effectRan.current) return;
+    if (effectRan.current || !sessionId) {
+      setLoading(false);
+      return;
+    }
+
     effectRan.current = true;
 
-    if (success === "true" && sessionId) {
-      const verifyAndSavePayment = async () => {
-        try {
-          
-          const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL 
-            ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/payments/verify-status`
-            : "http://localhost:5000/api/v1/payments/verify-status";
+    const verifyPayment = async () => {
+      try {
+        console.log(" Starting payment verification for session:", sessionId);
 
-          const response = await authFetch(backendUrl, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ session_id: sessionId }),
-          });
+        const response = await authFetch(`/api/v1/payments/verify-status`, {
+          method: "POST",
+          body: JSON.stringify({ session_id: sessionId }),
+        });
 
-          const data = await response.json();
+        console.log("📡 Response Status:", response.status);
 
-          if (data.success) {
-            setStatusMessage("Payment successful! Your library and profile have been updated.");
-          } else {
-            setStatusMessage(data.message || "Payment verification failed.");
-          }
-        } catch (error) {
-          console.error("Verification Error:", error);
-          setStatusMessage("Something went wrong while updating database.");
-        } finally {
-          setLoading(false);
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error(" Error Response Body:", errorText);
+          throw new Error(`HTTP Error ${response.status}: ${errorText}`);
         }
-      };
 
-      verifyAndSavePayment();
-    } else {
-      setLoading(false);
-      setStatusMessage("Invalid session or payment cancelled.");
-    }
-  }, [success, sessionId]);
+        const data = await response.json();
+        console.log("Verify Response Data:", data);
 
-  
+        if (data.success) {
+          setStatusMessage("Payment successful! Your library and profile have been updated.");
+          setIsSuccess(true);
+        } else {
+          setStatusMessage(data.message || "Verification failed.");
+          setErrorDetails(data.error || "");
+        }
+      } catch (error) {
+        console.error("🚨 Verification Failed:", error);
+        setStatusMessage("Something went wrong while updating database.");
+        setErrorDetails(error.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    verifyPayment();
+  }, [sessionId]);
+
+  const role = session?.user?.appRole?.toLowerCase();
+  const dashboardHref =
+    role === "writer" ? "/dashboard/writer" :
+    role === "admin" ? "/dashboard/admin" :
+    "/dashboard/reader";
+
   return (
     <div
       className="max-w-md w-full rounded-2xl p-8 text-center relative z-10"
@@ -75,16 +90,13 @@ export default function PaymentSuccessContent() {
             {statusMessage}
           </p>
         </div>
-      ) : success === "true" ? (
+      ) : isSuccess ? (
         <div className="flex flex-col items-center">
           <div className="w-16 h-16 bg-emerald-500/10 border border-emerald-500/30 rounded-full flex items-center justify-center mb-5 text-emerald-400">
             <CheckCircle2 size={32} />
           </div>
 
-          <h1
-            className="text-2xl font-bold text-white mb-2"
-            style={{ fontFamily: "'Inter', sans-serif" }}
-          >
+          <h1 className="text-2xl font-bold text-white mb-2">
             Thank You!
           </h1>
           <p className="text-slate-400 text-sm leading-relaxed mb-8">
@@ -93,7 +105,7 @@ export default function PaymentSuccessContent() {
 
           <div className="flex flex-col gap-3 w-full">
             <Link
-              href="/dashboard/user"
+              href={dashboardHref}
               className="flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-xs font-semibold text-black transition-all hover:opacity-90"
               style={{
                 background: "#A855F7",
@@ -118,11 +130,14 @@ export default function PaymentSuccessContent() {
       ) : (
         <div className="py-6">
           <p className="text-red-400 font-medium mb-4">{statusMessage}</p>
+          {errorDetails && (
+            <p className="text-xs text-slate-500 mb-4">{errorDetails}</p>
+          )}
           <Link
             href="/ebooks"
             className="inline-text text-sm text-purple-400 hover:underline"
           >
-            Back to Store
+            ← Back to Store
           </Link>
         </div>
       )}
