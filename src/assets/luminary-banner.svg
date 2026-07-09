@@ -1,0 +1,33 @@
+<svg width="1200" height="220" viewBox="0 0 1200 220" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#07070E"/>
+      <stop offset="100%" stop-color="#14101c"/>
+    </linearGradient>
+    <linearGradient id="waveGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#F4C430"/>
+      <stop offset="100%" stop-color="#D4537E"/>
+    </linearGradient>
+    <linearGradient id="textGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#F4C430"/>
+      <stop offset="100%" stop-color="#D4537E"/>
+    </linearGradient>
+  </defs>
+
+  <!-- background -->
+  <rect width="1200" height="220" fill="url(#bg)"/>
+
+  <!-- decorative wave at bottom -->
+  <path d="M0,180 C150,140 300,210 450,175 C600,140 750,205 900,170 C1050,140 1150,180 1200,165 L1200,220 L0,220 Z"
+        fill="url(#waveGrad)" opacity="0.18"/>
+  <path d="M0,195 C180,165 320,215 480,190 C640,165 780,215 940,185 C1060,165 1140,195 1200,185 L1200,220 L0,220 Z"
+        fill="url(#waveGrad)" opacity="0.32"/>
+
+  <!-- title -->
+  <text x="600" y="105" font-family="Georgia, 'Playfair Display', serif" font-size="64" font-weight="700"
+        fill="url(#textGrad)" text-anchor="middle">Luminary</text>
+
+  <!-- tagline -->
+  <text x="600" y="145" font-family="'Segoe UI', Inter, sans-serif" font-size="20" letter-spacing="1"
+        fill="#F0EDE6" text-anchor="middle" opacity="0.85">Discover &amp; Read Original Ebooks</text>
+</svg>
