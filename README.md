@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="https://capsule-render.vercel.app/api?type=waving&color=0:F4C430,100:D4537E&height=200&section=header&text=Luminary&fontSize=70&fontColor=07070E&fontAlignY=38&desc=Discover%20%26%20Read%20Original%20Ebooks&descAlignY=58&descSize=18&descColor=07070E&animation=fadeIn" />
+[<img src="https://capsule-render.vercel.app/api?type=waving&color=0:F4C430,100:D4537E&height=200&section=header&text=Luminary&fontSize=70&fontColor=07070E&fontAlignY=38&desc=Discover%20%26%20Read%20Original%20Ebooks&descAlignY=58&descSize=18&descColor=07070E&animation=fadeIn" />](https://capsule-render.vercel.app/api?type=waving&color=0:F4C430,100:D4537E&height=200&section=header&text=Luminary&fontSize=70&fontColor=07070E&fontAlignY=38&desc=Discover%20%26%20Read%20Original%20Ebooks&descAlignY=58&descSize=18&descColor=07070E&animation=fadeIn)
 
 <p>
   <a href="https://luminary-client.vercel.app/"><img src="https://img.shields.io/badge/Live-Demo-F4C430?style=for-the-badge&logo=vercel&logoColor=07070E" /></a>
